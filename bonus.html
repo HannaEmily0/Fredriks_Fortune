@@ -1,0 +1,1718 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Fredrik's Fortune — Theatrical Storm Nodes Bonus</title>
+<link href="https://fonts.googleapis.com/css2?family=Stardos+Stencil:wght@700&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0f1226;
+  --panel:#171b3a;
+  --panel-2:#1f2450;
+  --text:#eef2ff;
+  --muted:#aab3ff;
+  --gold:#ffd166;
+  --shadow:0 20px 40px rgba(0,0,0,.35);
+  --accent:#2ac7ff;
+  --mult:#a7f3d0;
+
+  --display:"Stardos Stencil", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --body:"Nunito", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:var(--body);
+  background:radial-gradient(1200px 700px at 80% -20%, #1d2152, #0f1226);
+  color:var(--text);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+}
+.app{
+  width:min(1100px, 100%);
+  background:linear-gradient(180deg, var(--panel), var(--panel-2));
+  border-radius:18px;
+  box-shadow:var(--shadow);
+  padding:20px;
+  text-align:center;
+}
+.app h1{
+  margin:0 0 10px;
+  font-size:24px;
+  font-family:var(--display);
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+.app p{margin:0 0 16px;color:var(--muted)}
+.app button{
+  background:linear-gradient(180deg, #2ac7ff, #1491f0);
+  color:#001b2b;
+  border:0;
+  padding:12px 20px;
+  border-radius:14px;
+  font-weight:800;
+  cursor:pointer;
+  box-shadow:0 10px 25px rgba(40,200,255,.35);
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+
+/* ===== BONUS STAGE OVERLAY ===== */
+#fredStage{
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(circle at 15% -10%, rgba(111,191,255,.3), transparent 55%),
+    radial-gradient(circle at 85% 110%, rgba(248,113,113,.3), transparent 55%),
+    radial-gradient(ellipse at center,#1b1436 0%,#050414 70%);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  overflow:hidden;
+  z-index:100;
+}
+#fredStage.active{
+  display:flex;
+  animation:stageFadeIn .5s ease forwards;
+}
+@keyframes stageFadeIn{
+  from{opacity:0;transform:scale(1.02);}
+  to{opacity:1;transform:scale(1);}
+}
+
+
+
+/* Fred win bounce */
+@keyframes fredBounce {
+  0%   { transform:translateY(0) scale(1); }
+  20%  { transform:translateY(-22px) scale(1.04); }
+  40%  { transform:translateY(0) scale(1); }
+  60%  { transform:translateY(-14px) scale(1.03); }
+  100% { transform:translateY(0) scale(1); }
+}
+
+.fred-win-bounce {
+  animation: fredBounce 0.8s ease-out infinite;
+}
+
+
+/* Curtains */
+.curtain{
+  position:absolute;
+  top:0;
+  width:50%;
+  height:100%;
+  z-index:5;
+  box-shadow:inset 0 0 30px rgba(0,0,0,.8);
+}
+.curtain.left{left:0;border-right:4px solid #000;transform-origin:left center;}
+.curtain.right{right:0;border-left:4px solid #000;transform-origin:right center;}
+
+.curtain::before{
+  content:"";
+  position:absolute; inset:0;
+  background:
+    radial-gradient(circle at 10% 0%,rgba(255,255,255,.35),transparent 55%),
+    radial-gradient(circle at 90% 0%,rgba(255,255,255,.25),transparent 55%),
+    repeating-linear-gradient(
+      -12deg,
+      #a31414 0px,#a31414 14px,
+      #5d0505 14px,#5d0505 28px
+    );
+}
+.curtain::after{
+  content:"";
+  position:absolute;
+  top:0; left:0; right:0;
+  height:22px;
+  background:linear-gradient(180deg,#f5cd7a,#b97a23);
+  box-shadow:0 6px 12px rgba(0,0,0,.6);
+}
+
+/* Curtain animations */
+.curtain.open.left{animation:openLeft 1.2s ease forwards;}
+.curtain.open.right{animation:openRight 1.2s ease forwards;}
+.curtain.close.left{animation:closeLeft 0.9s ease forwards;}
+.curtain.close.right{animation:closeRight 0.9s ease forwards;}
+
+@keyframes openLeft{from{transform:translateX(0)}to{transform:translateX(-110%)}}
+@keyframes openRight{from{transform:translateX(0)}to{transform:translateX(110%)}}
+@keyframes closeLeft{from{transform:translateX(-110%)}to{transform:translateX(0)}}
+@keyframes closeRight{from{transform:translateX(110%)}to{transform:translateX(0)}}
+
+/* ===== Stage layout ===== */
+.stage-content{
+  position:relative;
+  width:min(980px, 96vw);
+  height:min(560px, 90vh);
+  background:radial-gradient(ellipse at center,#251d4c 0%,#110c25 70%);
+  border-radius:22px;
+  border:2px solid rgba(255,255,255,.14);
+  box-shadow:0 0 35px rgba(0,0,0,.85);
+  overflow:hidden;
+}
+
+/* ===== Intro screen (tuned for readability & safety) ===== */
+.intro-screen{
+  position:absolute;
+  inset:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  /* allow scroll on very small screens so the button NEVER disappears */
+  overflow-y:auto;
+}
+
+.intro-inner{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  text-align:center;
+  gap:10px;                 /* controls spacing between subtitle, button, Fred */
+  max-height:100%;
+  padding:16px 12px 12px;
+  box-sizing:border-box;
+  transform:translateY(10px);
+}
+
+/* Subtitle – larger and visually stronger, slightly closer to Fred */
+#introSubtitle{
+  max-width:620px;
+  padding:14px 22px;
+  border-radius:18px;
+  background:rgba(0,0,0,.85);
+  box-shadow:0 0 34px rgba(0,0,0,.95);
+  font-size:19px;
+  line-height:1.35;
+  font-family:var(--display);
+  text-transform:uppercase;
+  letter-spacing:.1em;
+
+  /* NEW: reserve enough space for up to ~3 lines so height never changes */
+  min-height:4.5em;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+
+/* Next button – between text and Fred */
+#introNextBtn{
+  /* remove margin-top / margin-bottom, gap now controls spacing */
+  margin:0;
+
+  background:linear-gradient(180deg,#ffe88a,#ffb74a);
+  color:#311701;
+  border:0;
+  padding:9px 24px;
+  border-radius:999px;
+  font-weight:900;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  font-family:var(--display);
+  cursor:pointer;
+  box-shadow:0 10px 18px rgba(0,0,0,.7),0 0 16px rgba(255,232,138,.9);
+  transition:transform .06s ease, box-shadow .18s ease, filter .12s ease;
+}
+#introNextBtn:hover{filter:brightness(1.05);}
+#introNextBtn:active{transform:translateY(1px);box-shadow:0 6px 12px rgba(0,0,0,.7);}
+
+/* Fred – slightly smaller and higher so the button fits nicely below */
+#introFred{
+  width:260px;
+  max-width:55vw;
+  height:auto;
+  filter:drop-shadow(0 22px 40px rgba(0,0,0,.9));
+  opacity:0;
+  transform:translateY(18px) scale(1.02);
+  animation:introFredIn .8s ease-out forwards .4s;
+}
+@keyframes introFredIn{
+  from{
+    opacity:0;
+    transform:translateY(18px) scale(1.02);
+  }
+  to{
+    opacity:1;
+    transform:translateY(-6px) scale(0.98);
+  }
+}
+
+
+/* Screen-covering transition lightning */
+/* Screen-covering transition lightning */
+#transitionBolt{
+  position:fixed;        /* FULL PAGE, not just the stage */
+  inset:0;
+  pointer-events:none;
+  z-index:200;           /* above stage + curtains */
+}
+
+#transitionFlash{
+  position:absolute;
+  inset:-12%; /* bleed past edges for extra glow */
+  background:
+    radial-gradient(circle at 50% 50%,rgba(255,255,255,.97),rgba(255,255,255,0) 55%),
+    radial-gradient(circle at 12% 18%,rgba(255,255,255,.8),rgba(255,255,255,0) 60%),
+    radial-gradient(circle at 88% 82%,rgba(255,255,255,.8),rgba(255,255,255,0) 60%);
+  opacity:0;
+  mix-blend-mode:screen;
+}
+#transitionBolt.active #transitionFlash{
+  animation:transitionBoltFlash 1.25s ease-out forwards;
+}
+@keyframes transitionBoltFlash{
+  0%   { opacity:0;   }
+  12%  { opacity:1;   }
+  65%  { opacity:1;   }
+  100% { opacity:0;   }
+}
+
+#transitionSvg{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  overflow:visible;
+}
+
+body.shake{
+  animation:screenShake 0.55s ease-in-out;
+}
+
+@keyframes screenShake{
+  0%   { transform:translate(0,0); }
+  20%  { transform:translate(-4px,3px); }
+  40%  { transform:translate(3px,-4px); }
+  60%  { transform:translate(-3px,2px); }
+  80%  { transform:translate(2px,-3px); }
+  100% { transform:translate(0,0); }
+}
+
+/* ===== Game screen ===== */
+.stage-inner{
+  position:absolute;
+  inset:18px 18px 26px 18px;
+  display:none;
+  gap:18px;
+}
+
+/* Left: grid + UI */
+.grid-wrap{
+  position:relative;
+  flex:0 0 64%;
+  border-radius:20px;
+  background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(255,255,255,.04));
+  box-shadow:inset 0 0 24px rgba(0,0,0,.9);
+  padding:14px 16px 18px;
+  display:flex;
+  flex-direction:column;
+}
+
+/* Electric border aura around the game area */
+.grid-wrap::before{
+  content:"";
+  position:absolute;
+  inset:-3px;                 /* slightly outside the panel */
+  border-radius:24px;
+  pointer-events:none;
+  opacity:0;
+  border:2px solid rgba(129,140,248,.45);
+  box-shadow:0 0 0 rgba(191,219,254,0);
+  background:
+    radial-gradient(circle at 10% 0%, rgba(255,255,255,.40), transparent 55%),
+    radial-gradient(circle at 90% 0%, rgba(96,165,250,.75), transparent 60%),
+    radial-gradient(circle at 0% 100%, rgba(56,189,248,.75), transparent 60%);
+  background-size:160% 160%;
+  background-position:0% 0%;
+  transition:opacity .12s ease-out;
+}
+
+/* When charged by a strike */
+.grid-wrap.charged::before{
+  opacity:1;
+  animation:
+    electricBorder 0.75s ease-out forwards,
+    electricSurf 0.22s linear infinite;
+}
+
+/* Subtle physical buzz */
+.grid-wrap.charged{
+  animation:gridBuzz 0.22s ease-in-out 0s 2 alternate;
+}
+
+@keyframes electricBorder{
+  0%{
+    box-shadow:0 0 0 rgba(191,219,254,0);
+  }
+  20%{
+    box-shadow:
+      0 0 18px rgba(125,211,252,.9),
+      0 0 42px rgba(191,219,254,1);
+  }
+  40%{
+    box-shadow:
+      0 0 26px rgba(125,211,252,1),
+      0 0 70px rgba(196,181,253,1);
+  }
+  65%{
+    box-shadow:
+      0 0 18px rgba(125,211,252,.85),
+      0 0 40px rgba(191,219,254,.9);
+  }
+  100%{
+    box-shadow:
+      0 0 8px rgba(59,130,246,.45),
+      0 0 16px rgba(191,219,254,.45);
+    opacity:.25;
+  }
+}
+
+/* Fast shimmer moving around the border */
+@keyframes electricSurf{
+  0%  { background-position:0% 0%; }
+  50% { background-position:100% 40%; }
+  100%{ background-position:0% 100%; }
+}
+
+/* Tiny physical jitter so it feels alive */
+@keyframes gridBuzz{
+  0%   { transform:translate(0,0); }
+  50%  { transform:translate(1px,-1px); }
+  100% { transform:translate(-1px,1px); }
+}
+
+/* Moving spotlight */
+.spotlight{
+  position:absolute;
+  inset:-20% -10%;
+  background:
+    radial-gradient(ellipse at 30% 0%,rgba(255,255,224,.30),transparent 60%),
+    radial-gradient(circle at 80% 110%,rgba(111,199,255,.22),transparent 60%);
+  mix-blend-mode:screen;
+  opacity:.24;
+  pointer-events:none;
+  animation:spotSweep 7s ease-in-out infinite alternate;
+}
+@keyframes spotSweep{
+  0%{transform:translateX(-8%) translateY(0) rotate(3deg);opacity:.18;}
+  50%{transform:translateX(6%) translateY(4%) rotate(-4deg);opacity:.33;}
+  100%{transform:translateX(10%) translateY(-3%) rotate(5deg);opacity:.22;}
+}
+
+/* HUD bar */
+.bonus-ui{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  font-size:14px;
+  margin-bottom:12px;
+  z-index:2;
+}
+.hud-group{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.bonus-pill{
+  padding:6px 10px;
+  border-radius:999px;
+  background:rgba(0,0,0,.7);
+  border:1px solid rgba(255,255,255,.18);
+  font-variant-numeric:tabular-nums;
+}
+.bonus-pill strong{font-weight:800;}
+
+#strikeBtn{
+  padding:10px 28px;
+  border-radius:999px;
+  border:0;
+  font-weight:900;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  cursor:pointer;
+  background:linear-gradient(180deg,#ffe88a,#ffb74a);
+  color:#311701;
+  box-shadow:0 10px 18px rgba(0,0,0,.7),0 0 16px rgba(255,232,138,.9);
+  transition:transform .06s ease, box-shadow .18s ease, filter .12s ease, opacity .15s ease;
+}
+#strikeBtn:hover:not(:disabled){filter:brightness(1.05);}
+#strikeBtn:active:not(:disabled){transform:translateY(1px);box-shadow:0 6px 12px rgba(0,0,0,.7);}
+#strikeBtn:disabled{
+  opacity:.35;
+  cursor:not-allowed;
+  box-shadow:none;
+}
+
+/* strikes */
+.strike-pips{
+  display:flex;
+  gap:4px;
+}
+.strike-pip{
+  width:12px;
+  height:18px;
+  border-radius:7px;
+  background:rgba(255,255,255,.08);
+  position:relative;
+  overflow:hidden;
+}
+.strike-pip::after{
+  content:"";
+  position:absolute;
+  inset:1px 1px 4px;
+  border-radius:999px;
+  background:radial-gradient(circle at 30% 0%,rgba(255,255,255,.65),rgba(255,232,138,.3) 45%,rgba(255,184,80,.0) 100%);
+  opacity:0;
+  transition:opacity .2s ease;
+}
+.strike-pip.active::after{opacity:1;}
+.strike-pip.spent{
+  background:rgba(15,23,42,.8);
+}
+
+/* Grid */
+.bonus-grid{
+  position:relative;
+  flex:1;
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  grid-template-rows:repeat(4,1fr);
+  gap:8px;
+  padding:6px 4px 4px;
+}
+.cell{
+  position:relative;
+  border-radius:18px;
+  background:radial-gradient(circle at 20% 0%,rgba(255,255,255,.06),rgba(5,7,26,.95));
+  border:1px solid rgba(255,255,255,.08);
+  overflow:hidden;
+  box-shadow:
+    inset 0 3px 7px rgba(255,255,255,.04),
+    inset 0 -8px 18px rgba(0,0,0,.95);
+}
+
+/* Orbs */
+.orb{
+  position:absolute;
+  left:50%; top:50%;
+  width:74%; height:74%;
+  border-radius:999px;
+  transform:translate(-50%,-50%) scale(.4);
+  opacity:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:800;
+  font-size:20px;
+  letter-spacing:.03em;
+  font-variant-numeric:tabular-nums;
+  border:2px solid rgba(255,255,255,.75);
+  text-shadow:0 1px 0 rgba(255,255,255,.9);
+  animation:orbAppear .6s cubic-bezier(.18,.8,.25,1) forwards;
+}
+@keyframes orbAppear{
+  0%{opacity:0;transform:translate(-50%,-60%) scale(.25);}
+  60%{opacity:1;transform:translate(-50%,-47%) scale(1.1);}
+  100%{opacity:1;transform:translate(-50%,-50%) scale(1);}
+}
+
+/* Credit nodes (three tiers) */
+.orb.credit.t1{
+  color:#241001;
+  background:radial-gradient(circle at 30% 18%,#fffef8,#ffeebc 40%,#ffd26a 70%,#ffb23e 100%);
+  box-shadow:0 4px 8px rgba(0,0,0,.65),0 0 18px rgba(255,210,120,.9);
+}
+.orb.credit.t2{
+  color:#1f133b;
+  background:radial-gradient(circle at 30% 18%,#ffffff,#e0f2fe 40%,#a5b4fc 70%,#6366f1 100%);
+  box-shadow:0 4px 10px rgba(0,0,0,.7),0 0 20px rgba(129,140,248,1);
+}
+.orb.credit.t3{
+  color:#022c22;
+  background:radial-gradient(circle at 30% 18%,#ffffff,#bbf7d0 40%,#34d399 70%,#16a34a 100%);
+  box-shadow:0 4px 12px rgba(0,0,0,.75),0 0 24px rgba(52,211,153,1);
+}
+
+/* Multiplier core – on fire */
+.orb.mult{
+  color:#1f1302;
+  background:
+    linear-gradient(to top,#7f1d1d 0%,#b91c1c 18%,rgba(0,0,0,0) 40%),
+    radial-gradient(circle at 30% 16%,#fff7ed,#fed7aa 36%,#fdba74 65%,#f97316 100%);
+  box-shadow:0 4px 14px rgba(0,0,0,.85),0 0 28px rgba(248,113,113,1);
+  font-size:18px;
+  position:relative;
+  overflow:hidden;
+}
+.orb.mult::after{
+  content:"";
+  position:absolute;
+  left:10%;
+  right:10%;
+  bottom:-6%;
+  top:55%;
+  background:
+    radial-gradient(circle at 20% 100%,rgba(254,215,170,.9),rgba(248,113,113,0) 60%),
+    radial-gradient(circle at 50% 100%,rgba(253,164,175,.95),rgba(248,113,113,0) 65%),
+    radial-gradient(circle at 80% 100%,rgba(252,211,77,.9),rgba(248,113,113,0) 60%);
+  mix-blend-mode:screen;
+  opacity:.9;
+  animation:flameFlicker 0.7s ease-in-out infinite alternate;
+}
+@keyframes flameFlicker{
+  0%{transform:translateY(2px) scaleY(1);opacity:.7;}
+  50%{transform:translateY(-1px) scaleY(1.08);opacity:1;}
+  100%{transform:translateY(1px) scaleY(0.96);opacity:.8;}
+}
+
+/* Chest */
+.orb.chest{
+  color:#1f1302;
+  background:radial-gradient(circle at 25% 15%,#fef9c3,#fed7aa 40%,#fbbf24 70%,#b45309 100%);
+  box-shadow:0 4px 14px rgba(0,0,0,.85),0 0 26px rgba(251,191,36,1);
+  font-size:18px;
+}
+
+/* Dead shard (visual only) */
+.orb.dead{
+  color:#e5e7eb;
+  background:radial-gradient(circle at 20% 0%,#4b5563,#020617 75%);
+  border-color:rgba(148,163,184,.9);
+  box-shadow:0 4px 8px rgba(0,0,0,.9),0 0 8px rgba(15,23,42,1);
+  font-size:16px;
+}
+
+/* Hit / upgrade */
+.orb.hit{
+  animation:ignite .48s ease-out;
+}
+@keyframes ignite{
+  0%{transform:translate(-50%,-50%) scale(1);box-shadow:0 0 20px rgba(255,255,255,1),0 0 40px rgba(255,210,140,1);}
+  50%{transform:translate(-50%,-52%) scale(1.18);}
+  100%{transform:translate(-50%,-50%) scale(1.04);}
+}
+
+/* Final scoring glow */
+.orb.final{
+  animation:finalGlow 1s ease-out;
+}
+@keyframes finalGlow{
+  0%{box-shadow:0 0 22px rgba(255,220,150,1),0 0 40px rgba(255,160,70,1);}
+  100%{box-shadow:0 0 12px rgba(255,210,140,.9),0 0 24px rgba(255,150,60,.85);}
+}
+
+/* Floating labels */
+.plus-label{
+  position:absolute;
+  pointer-events:none;
+  font-weight:800;
+  color:#ffeeba;
+  text-shadow:0 0 8px rgba(0,0,0,.9);
+  transform:translate(-50%,-20px);
+  animation:plusFloat .9s ease-out forwards;
+  font-size:14px;
+}
+.plus-label.mult{ color:var(--mult); }
+.plus-label.chest{ color:#fef3c7; }
+.plus-label.dead{ color:#9ca3af; }
+@keyframes plusFloat{
+  0%{opacity:0;transform:translate(-50%,0);}
+  20%{opacity:1;}
+  100%{opacity:0;transform:translate(-50%,-30px);}
+}
+
+/* Lightning FX layer (for in-game strikes) */
+.fx-layer{
+  position:absolute;
+  inset:40px 24px 32px 24px;
+  pointer-events:none;
+  z-index:3;
+}
+.fx-layer svg{width:100%;height:100%;overflow:visible;}
+.fx-flash{
+  position:absolute; inset:0;
+  background:radial-gradient(ellipse at center, rgba(255,255,255,.52), rgba(255,255,255,0) 60%);
+  mix-blend-mode:screen; opacity:0; transition:opacity .18s ease;
+  pointer-events:none;
+}
+
+/* Footer hint */
+.grid-footer{
+  margin-top:8px;
+  font-size:13px;
+  color:var(--muted);
+  text-align:left;
+}
+
+/* Right side: Fred in-game */
+.fred-side{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-end;
+  padding-bottom:8px;
+}
+.fred-frame{
+  position:relative;
+  width:240px;
+  max-width:100%;
+}
+#fredAvatar{
+  width:100%;
+  height:auto;
+  opacity:0;
+  transform:translateY(10px);
+  transition:opacity .4s ease, transform .4s ease;
+  filter:drop-shadow(0 18px 32px rgba(0,0,0,.85));
+}
+#fredAvatar.show{
+  opacity:1;
+  transform:translateY(0);
+}
+.fred-aura{
+  position:absolute;
+  inset:-16px;
+  border-radius:999px;
+  background:
+    radial-gradient(circle at 20% 0%,rgba(255,255,255,.25),transparent 55%),
+    radial-gradient(circle at 80% 100%,rgba(94,234,212,.17),transparent 60%);
+  opacity:.0;
+  filter:blur(2px);
+  transition:opacity .35s ease;
+}
+.fred-aura.on{opacity:.8;}
+
+#subtitle{
+  margin-top:10px;
+  padding:8px 14px;
+  min-height:32px;
+  border-radius:999px;
+  background:rgba(0,0,0,.8);
+  font-size:14px;
+  text-align:center;
+  max-width:280px;
+  text-shadow:0 0 10px rgba(0,0,0,.8);
+  opacity:0;
+  transform:translateY(6px);
+  transition:opacity .2s ease, transform .2s ease;
+  font-family:var(--display);
+  text-transform:uppercase;
+  letter-spacing:.09em;
+  line-height:1.3;
+}
+#subtitle.show{
+  opacity:1;
+  transform:translateY(0);
+}
+
+/* Confetti */
+.confetti{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  z-index:6;
+  overflow:hidden;
+}
+.confetti span{
+  position:absolute;
+  width:7px;
+  height:11px;
+  background:var(--c);
+  opacity:.9;
+  transform:translateY(-40px);
+  animation:confettiFall 3.2s linear forwards;
+}
+@keyframes confettiFall{
+  0%{transform:translateY(-40px) rotate(0deg);}
+  100%{transform:translateY(620px) rotate(360deg);opacity:0;}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>Fredrik's Fortune — Theatrical Storm Nodes Bonus (demo)</h1>
+  <p>In production this would trigger from scatters. For now, click below to see the full theatrical bonus.</p>
+  <button id="triggerBonus">Enter Lightning Bonus</button>
+</div>
+
+<!-- BONUS STAGE -->
+<div id="fredStage" aria-hidden="true">
+  <div class="curtain left"></div>
+  <div class="curtain right"></div>
+
+  <div class="stage-content">
+    <!-- Big screen lightning transition overlay -->
+    <div id="transitionBolt">
+      <div id="transitionFlash"></div>
+      <svg id="transitionSvg" data-fx="1"></svg>
+    </div>
+
+    <!-- Intro: Fred center with subtitles above + next button -->
+    <div class="intro-screen" id="introScreen">
+  <div class="intro-inner">
+    <div id="introSubtitle"></div>
+    <button id="introNextBtn">Next</button>
+    <img id="introFred" src="avatar_fred_welcome.png" alt="Fred greets you">
+  </div>
+</div>
+
+<div id="finalWinOverlay" style="
+  position:absolute;
+  inset:0;
+  display:none;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+  background:rgba(0,0,0,0.85);
+  z-index:999;
+  text-align:center;
+  color:white;
+  padding:20px;
+">
+  <img id="fredWinImg" src="" style="width:260px; filter:drop-shadow(0 0 25px rgba(255,200,60,.8));">
+  <div id="winMessage" style="
+    font-family: var(--display);
+    font-size: 32px;
+    margin-top: 20px;
+    text-shadow:0 0 22px rgba(255,255,255,.8);
+  "></div>
+</div>
+
+    <!-- Actual bonus game layout -->
+    <div class="stage-inner" id="gameScreen">
+      <div class="grid-wrap">
+        <div class="spotlight"></div>
+
+        <div class="bonus-ui">
+          <div class="hud-group">
+            <div class="bonus-pill">
+              Strikes <strong id="strikesLabel">0</strong>
+            </div>
+            <div class="strike-pips" id="strikePips"></div>
+          </div>
+
+          <button id="strikeBtn" disabled>STRIKE</button>
+
+          <div class="hud-group">
+            <div class="bonus-pill">
+              Mult <strong id="multLabel">x1</strong>
+            </div>
+            <div class="bonus-pill">
+              Vault <strong id="winLabel">0</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="bonus-grid" id="bonusGrid"></div>
+        <div class="fx-layer" id="fxLayer"></div>
+        <div class="grid-footer">
+          <strong>Storm Nodes:</strong> credits grow, flaming cores boost the multiplier, chests blast instant wins. Some shards are just visual sparks.
+        </div>
+      </div>
+
+      <div class="fred-side">
+        <div class="fred-frame">
+          <div class="fred-aura" id="fredAura"></div>
+          <img id="fredAvatar" src="avatar_fred_standard.png" alt="Fred">
+        </div>
+        <div id="subtitle"></div>
+      </div>
+    </div>
+
+    <div class="confetti" id="confetti"></div>
+  </div>
+</div>
+
+<script>
+/* ===== DOM ===== */
+const stage        = document.getElementById('fredStage');
+const leftCurtain  = document.querySelector('.curtain.left');
+const rightCurtain = document.querySelector('.curtain.right');
+
+const introScreen   = document.getElementById('introScreen');
+const introSubtitle = document.getElementById('introSubtitle');
+const introFred     = document.getElementById('introFred');
+const introNextBtn  = document.getElementById('introNextBtn');
+
+const transitionBolt = document.getElementById('transitionBolt');
+const transitionSvg  = document.getElementById('transitionSvg');
+
+const gameScreen   = document.getElementById('gameScreen');
+const gridEl       = document.getElementById('bonusGrid');
+const fxLayer      = document.getElementById('fxLayer');
+const strikeBtn    = document.getElementById('strikeBtn');
+const strikesLabel = document.getElementById('strikesLabel');
+const multLabel    = document.getElementById('multLabel');
+const winLabel     = document.getElementById('winLabel');
+const strikePipsEl = document.getElementById('strikePips');
+const fredAvatar   = document.getElementById('fredAvatar');
+const fredAura     = document.getElementById('fredAura');
+const subtitleEl   = document.getElementById('subtitle');
+const confettiEl   = document.getElementById('confetti');
+
+const gridWrap     = document.querySelector('.grid-wrap'); // NEW
+
+const avatars = {
+  welcome:  "avatar_fred_welcome.png",
+  standard: "avatar_fred_standard.png",
+  goodbye:  "avatar_fred_goodbye.png",
+  win:      "avatar_fred_win.png"   // <-- ADD THIS
+};
+
+function creditsToMoney(credits){
+  // adjust multiplier to change payout feel
+  return (credits * 0.05).toFixed(2);
+}
+
+/* ===== SOUND ENGINE ===== */
+
+function createSound(src, { volume = 1, loop = false } = {}) {
+  const audio = new Audio(src);
+  audio.volume = volume;
+  audio.loop = loop;
+  return audio;
+}
+
+// For one-shot effects so multiple can overlap
+function playSfx(audio, volumeOverride) {
+  if (!audio) return;
+  const a = audio.cloneNode();
+  if (volumeOverride != null) a.volume = volumeOverride;
+  a.play().catch(()=>{});
+}
+
+const SOUND = {
+  ambient:        createSound("bonus_background_music.mp3", { volume: 0.23, loop: true }),
+  enterBonus:     createSound("enter_bonus_game.mp3",       { volume: 0.35 }),
+  thunder:        createSound("thunder.mp3",                { volume: 0.5 }),     // we'll trim this later
+  strike:         createSound("bonus_lightning_hit.mp3",    { volume: 0.38 }),
+  bing1:          createSound("bonus_bing1.mp3",            { volume: 0.26 }),
+  bing2:          createSound("bonus_bing2.mp3",            { volume: 0.26 }),
+  bing3:          createSound("bonus_bing3.mp3",            { volume: 0.26 }),
+  bing4:          createSound("bonus_bing4.mp3",            { volume: 0.26 }),
+  electricBuzz:   createSound("bonus_electric_buzz.mp3",    { volume: 0.3 }),
+  multWhoosh:     createSound("bonus_fire_whoosh.mp3",      { volume: 0.4 }),
+  chestCoins:     createSound("bonus_win_coins.mp3",        { volume: 0.5 })      // now used for FINAL count-up only
+  // fanfare removed
+};
+
+// helper to randomise between bing1–4
+function playRandomBing() {
+  const pool = [SOUND.bing1, SOUND.bing2, SOUND.bing3, SOUND.bing4];
+  const pick = pool[Math.floor(Math.random() * pool.length)];
+  playSfx(pick);
+}
+
+// Ambient control
+function startAmbient() {
+  if (!SOUND.ambient) return;
+  if (SOUND.ambient.paused) {
+    SOUND.ambient.currentTime = 0;
+    SOUND.ambient.play().catch(()=>{});
+  }
+}
+
+function stopAmbient() {
+  if (!SOUND.ambient) return;
+  SOUND.ambient.pause();
+  SOUND.ambient.currentTime = 0;
+}
+
+
+/* ===== CONFIG / STATE ===== */
+const ROWS = 4;
+const COLS = 7;
+
+const BASE_STRIKES  = 7;
+const PATH_HITS     = 4;
+const MULT_START    = 1;
+const MULT_MAX      = 8;
+const CREDIT_MIN    = 2;
+const CREDIT_MAX    = 8;
+const CHEST_PCT     = 0.45;
+
+let board = [];
+let strikesLeft = 0;
+let strikesUsed = 0;
+let totalBase = 0;
+let multiplier = MULT_START;
+let runningStrike = false;
+let finished = false;
+
+let introIndex = 0;
+const introLines = [
+  "Welcome to Fredrik's Lightning Theatre.",
+  "Each strike charges Storm Nodes to build your vault.",
+  "Credit orbs grow, flaming cores boost your multiplier, and golden chests drop instant wins.",
+  "When you're ready, hit BEGIN BONUS to unleash the storm!"
+];
+
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+
+/* ===== Curtains ===== */
+async function openCurtains(){
+  playSfx(SOUND.enterBonus);   // <- ADD THIS
+
+  stage.classList.add('active');
+  stage.setAttribute('aria-hidden','false');
+  leftCurtain.className  = 'curtain left open left';
+  rightCurtain.className = 'curtain right open right';
+  await sleep(1200);
+}
+async function closeCurtains(){
+  leftCurtain.className  = 'curtain left close left';
+  rightCurtain.className = 'curtain right close right';
+  await sleep(900);
+  stage.classList.remove('active');
+  stage.setAttribute('aria-hidden','true');
+
+  stopAmbient();   // <- ADD THIS
+}
+
+/* ===== Intro flow ===== */
+function showIntroLine(){
+  introSubtitle.textContent = introLines[introIndex];
+  introNextBtn.textContent = (introIndex === introLines.length - 1) ? "BEGIN BONUS" : "NEXT";
+}
+async function handleIntroNext(){
+  if (introIndex < introLines.length - 1){
+    introIndex++;
+    showIntroLine();
+  } else {
+    await playIntroTransition();
+  }
+}
+
+/* ===== Intro lightning (top-left → bottom-right, main-game style) ===== */
+function ensureIntroFxDefs(){
+  let defs = transitionSvg.querySelector('defs');
+  if (defs) return defs;
+
+  defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
+
+  const makeFilter = (id, inner) => {
+    const f=document.createElementNS('http://www.w3.org/2000/svg','filter');
+    f.id=id; f.innerHTML=inner; return f;
+  };
+  const fCore  = makeFilter('intro-core', `<feGaussianBlur in="SourceGraphic" stdDeviation="0.6" result="b1"/><feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="b1"/></feMerge>`);
+  const fMid   = makeFilter('intro-mid',  `<feGaussianBlur in="SourceGraphic" stdDeviation="2.2" result="b2"/><feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 .9 0" result="b2a"/><feMerge><feMergeNode in="b2a"/></feMerge>`);
+  const fOuter = makeFilter('intro-outer',`<feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b3"/><feColorMatrix type="matrix" values="0.7 0 0 0 0  0 0.9 0 0 0  0.9 0.9 1 0 0  0 0 0 .8 0" result="b3a"/><feMerge><feMergeNode in="b3a"/></feMerge>`);
+
+  const fWarp=document.createElementNS('http://www.w3.org/2000/svg','filter');
+  fWarp.id='intro-warp';
+  fWarp.setAttribute('x','-20%');
+  fWarp.setAttribute('y','-20%');
+  fWarp.setAttribute('width','140%');
+  fWarp.setAttribute('height','140%');
+
+  const n=document.createElementNS('http://www.w3.org/2000/svg','feTurbulence');
+  n.setAttribute('type','fractalNoise');
+  n.setAttribute('baseFrequency','0.008');
+  n.setAttribute('numOctaves','1');
+  n.setAttribute('seed','3');
+  n.setAttribute('result','t');
+  const nAnim=document.createElementNS('http://www.w3.org/2000/svg','animate');
+  nAnim.setAttribute('attributeName','baseFrequency');
+  nAnim.setAttribute('values','0.006;0.012;0.006');
+  nAnim.setAttribute('dur','0.55s');
+  nAnim.setAttribute('repeatCount','indefinite');
+  n.appendChild(nAnim);
+
+  const d=document.createElementNS('http://www.w3.org/2000/svg','feDisplacementMap');
+  d.setAttribute('in','SourceGraphic');
+  d.setAttribute('in2','t');
+  d.setAttribute('scale','4');
+  d.setAttribute('xChannelSelector','R');
+  d.setAttribute('yChannelSelector','G');
+  const dAnim=document.createElementNS('http://www.w3.org/2000/svg','animate');
+  dAnim.setAttribute('attributeName','scale');
+  dAnim.setAttribute('values','3;7;3');
+  dAnim.setAttribute('dur','0.5s');
+  dAnim.setAttribute('repeatCount','indefinite');
+  d.appendChild(dAnim);
+
+  fWarp.appendChild(n);
+  fWarp.appendChild(d);
+
+  [fCore,fMid,fOuter,fWarp].forEach(f=>defs.appendChild(f));
+  transitionSvg.appendChild(defs);
+  return defs;
+}
+function jitteredPolylineIntro(points,iterations=3,roughness=18){
+  let pts=points.map(p=>[...p]);
+  for(let k=0;k<iterations;k++){
+    const next=[];
+    for(let i=0;i<pts.length-1;i++){
+      const [x1,y1]=pts[i],[x2,y2]=pts[i+1];
+      next.push([x1,y1]);
+      const mx=(x1+x2)/2,my=(y1+y2)/2,
+            nx=y2-y1, ny=-(x2-x1),
+            len=Math.hypot(nx,ny)||1,
+            ux=nx/len, uy=ny/len;
+      const amp=(Math.random()*2-1)*roughness*Math.pow(0.6,k);
+      next.push([mx+ux*amp,my+uy*amp]);
+    }
+    next.push(pts[pts.length-1]);
+    pts=next;
+  }
+  return pts;
+}
+function polylineLengthIntro(pts){
+  let d=0;
+  for(let i=0;i<pts.length-1;i++){
+    const [x1,y1]=pts[i],[x2,y2]=pts[i+1];
+    d += Math.hypot(x2-x1,y2-y1);
+  }
+  return d;
+}
+function pointsToAttrIntro(pts){ return pts.map(p=>p.join(',')).join(' '); }
+
+function drawIntroBolt(){
+  ensureIntroFxDefs();
+
+  const defs = transitionSvg.querySelector('defs');
+  transitionSvg.innerHTML = "";
+  if (defs) transitionSvg.appendChild(defs);
+
+  const rect = transitionSvg.getBoundingClientRect();
+  const w = rect.width  || window.innerWidth  || 800;
+  const h = rect.height || window.innerHeight || 600;
+
+  function spawnPattern(thicknessFactor = 1, roughnessBoost = 0){
+    function makeBolt(start, mid, end, thicknessScale=1, roughness=26){
+      const base = [start, mid, end];
+      const jag  = jitteredPolylineIntro(base, 3, roughness + roughnessBoost);
+      const total= polylineLengthIntro(jag) + 220;
+      const pAttr= pointsToAttrIntro(jag);
+
+      const mk = (stroke, width, filter) => {
+        const pl = document.createElementNS('http://www.w3.org/2000/svg','polyline');
+        pl.setAttribute('points', pAttr);
+        pl.setAttribute('fill','none');
+        pl.setAttribute('stroke', stroke);
+        pl.setAttribute('stroke-width', width * thicknessScale * thicknessFactor);
+        pl.setAttribute('stroke-linejoin','round');
+        pl.setAttribute('stroke-linecap','round');
+        pl.setAttribute('filter', `url(#${filter})`);
+        pl.style.strokeDasharray  = total;
+        pl.style.strokeDashoffset = total;
+        return pl;
+      };
+
+      const outer = mk('#6ff', 11, 'intro-outer');
+      const midLn = mk('#cff',  8, 'intro-mid');
+      const core  = mk('#fff',  5, 'intro-core');
+
+      const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+      g.appendChild(outer);
+      g.appendChild(midLn);
+      g.appendChild(core);
+      g.setAttribute('filter','url(#intro-warp)');
+      transitionSvg.appendChild(g);
+
+      const t0  = performance.now();
+      const dur = 750;
+
+      function tick(t){
+        const k    = Math.min(1, (t - t0) / dur);
+        const offs = (1 - k) * total;
+        outer.style.strokeDashoffset = offs;
+        midLn.style.strokeDashoffset = offs;
+        core.style.strokeDashoffset  = offs;
+        if (k < 1){
+          requestAnimationFrame(tick);
+        } else {
+          g.style.opacity = '0.9';
+          setTimeout(() => g.remove(), 320);
+        }
+      }
+      requestAnimationFrame(tick);
+    }
+
+    // MAIN huge diagonal
+    makeBolt(
+      [w * 0.05, -h * 0.10],
+      [w * 0.45,  h * 0.40],
+      [w * 0.95,  h * 1.10],
+      1.15,
+      30
+    );
+
+    // SECONDARY fork
+    makeBolt(
+      [w * 0.88, -h * 0.08],
+      [w * 0.60,  h * 0.30],
+      [w * 0.18,  h * 1.05],
+      0.9,
+      24
+    );
+
+    // CROSS-BOLT mid-screen
+    makeBolt(
+      [-w * 0.10, h * 0.35],
+      [ w * 0.40, h * 0.60],
+      [ w * 1.10, h * 0.80],
+      0.8,
+      22
+    );
+  }
+
+  // First big crack
+  spawnPattern(1.0, 0);
+
+  // Aftershock: slightly thinner, a bit more chaotic
+  setTimeout(() => {
+    spawnPattern(0.75, 6);
+  }, 250);
+}
+
+async function playIntroTransition(){
+  introNextBtn.disabled = true;
+
+  // turn on full-screen overlay + shake
+  transitionBolt.classList.add('active');
+document.body.classList.add('shake');
+drawIntroBolt();
+
+// play thunder but cut it off early so it matches the visual
+if (SOUND.thunder){
+  SOUND.thunder.currentTime = 0;
+  SOUND.thunder.play().catch(()=>{});
+
+  // tweak this duration (in ms) to match how long the lightning is visible
+  setTimeout(() => {
+    SOUND.thunder.pause();
+    SOUND.thunder.currentTime = 0;
+  }, 900);  // ~0.9 seconds is a good starting point
+}
+
+  // keep intro visible a hair longer under the first flash
+  await sleep(350);
+  introScreen.style.display = 'none';
+  gameScreen.style.display  = 'flex';
+
+  // let lightning + aftershock + flash finish
+  await sleep(1150);
+  transitionBolt.classList.remove('active');
+  document.body.classList.remove('shake');
+
+  await startBonusRound();
+}
+
+/* ===== Fred chatter (in-game, non-blocking) ===== */
+let speakTimeout;
+function fredSpeak(text, avatarKey='standard', duration=2600){
+  if (speakTimeout) clearTimeout(speakTimeout);
+  fredAvatar.src = avatars[avatarKey] || avatars.standard;
+  fredAvatar.classList.add('show');
+  subtitleEl.textContent = text;
+  subtitleEl.classList.add('show');
+  speakTimeout = setTimeout(()=> subtitleEl.classList.remove('show'), duration);
+}
+function fredPulseAura(on){ fredAura.classList.toggle('on', !!on); }
+
+/* ===== Board helpers ===== */
+function resetBoard(){
+  board = Array.from({length:ROWS}, ()=> Array(COLS).fill(null));
+  gridEl.innerHTML = '';
+  for(let i=0;i<ROWS*COLS;i++){
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    gridEl.appendChild(cell);
+  }
+}
+function cellAt(r,c){ return gridEl.children[r*COLS + c]; }
+function createOrbElement(type, tier, value){
+  const orb = document.createElement('div');
+  orb.classList.add('orb', type);
+  if (type === 'credit'){
+    orb.classList.add('t'+tier);
+    orb.textContent = value;
+  } else if (type === 'mult'){
+    orb.textContent = '×' + value;
+  } else if (type === 'chest'){
+    orb.textContent = '⧈';
+  } else if (type === 'dead'){
+    orb.textContent = '✶';
+  }
+  return orb;
+}
+function placeOrb(r,c,data,hit){
+  const host = cellAt(r,c);
+  let orb = host.querySelector('.orb');
+  if (!orb){
+    orb = createOrbElement(data.type, data.tier, data.value);
+    host.appendChild(orb);
+  } else {
+    orb.className = 'orb ' + data.type + (data.type==='credit' ? (' t'+data.tier) : '');
+    if (data.type === 'credit') orb.textContent = data.value;
+    if (data.type === 'mult')   orb.textContent = '×'+data.value;
+    if (data.type === 'chest')  orb.textContent = '⧈';
+    if (data.type === 'dead')   orb.textContent = '✶';
+  }
+  if (hit){
+    orb.classList.add('hit');
+    setTimeout(()=>orb.classList.remove('hit'), 480);
+  }
+}
+
+/* ===== Totals & HUD ===== */
+function recomputeBase(){
+  totalBase = 0;
+  for(let r=0;r<ROWS;r++){
+    for(let c=0;c<COLS;c++){
+      const cell = board[r][c];
+      if (cell && cell.type === 'credit') totalBase += cell.value;
+    }
+  }
+}
+function currentWin(){ return totalBase * multiplier; }
+function updateHud(){
+  strikesLabel.textContent = String(strikesLeft);
+  multLabel.textContent    = 'x'+multiplier;
+  winLabel.textContent     = String(currentWin());
+  updateStrikePips();
+}
+function updateStrikePips(){
+  strikePipsEl.innerHTML = '';
+  for(let i=0;i<BASE_STRIKES;i++){
+    const pip = document.createElement('div');
+    pip.className = 'strike-pip';
+    if (i < strikesUsed) pip.classList.add('spent');
+    else if (i < strikesUsed + strikesLeft) pip.classList.add('active');
+    strikePipsEl.appendChild(pip);
+  }
+}
+
+/* ===== Lightning FX (slower, random cells) ===== */
+function getFlash(){
+  let f=fxLayer.querySelector('.fx-flash');
+  if(!f){
+    f=document.createElement('div');
+    f.className='fx-flash';
+    fxLayer.appendChild(f);
+  }
+  return f;
+}
+function flashOn(){ getFlash().style.opacity='1'; }
+function flashOff(){ getFlash().style.opacity='0'; }
+
+function ensureFxSvg(){
+  let svg = fxLayer.querySelector('svg[data-fx]');
+  if (svg) return svg;
+
+  svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('data-fx','1');
+  svg.setAttribute('width','100%');
+  svg.setAttribute('height','100%');
+
+  const defs=document.createElementNS('http://www.w3.org/2000/svg','defs');
+
+  const makeFilter = (id, inner) => {
+    const f=document.createElementNS('http://www.w3.org/2000/svg','filter');
+    f.id=id; f.innerHTML=inner; return f;
+  };
+
+  const fCore  = makeFilter('bolt-core', `<feGaussianBlur in="SourceGraphic" stdDeviation="0.6" result="b1"/><feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="b1"/></feMerge>`);
+  const fMid   = makeFilter('bolt-mid',  `<feGaussianBlur in="SourceGraphic" stdDeviation="2.2" result="b2"/><feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 .9 0" result="b2a"/><feMerge><feMergeNode in="b2a"/></feMerge>`);
+  const fOuter = makeFilter('bolt-outer',`<feGaussianBlur in="SourceGraphic" stdDeviation="5.5" result="b3"/><feColorMatrix type="matrix" values="0.7 0 0 0 0  0 0.9 0 0 0  0.9 0.9 1 0 0  0 0 0 .7 0" result="b3a"/><feMerge><feMergeNode in="b3a"/></feMerge>`);
+
+  const fWarp=document.createElementNS('http://www.w3.org/2000/svg','filter');
+  fWarp.id='bolt-warp';
+  fWarp.setAttribute('x','-20%');
+  fWarp.setAttribute('y','-20%');
+  fWarp.setAttribute('width','140%');
+  fWarp.setAttribute('height','140%');
+
+  const n=document.createElementNS('http://www.w3.org/2000/svg','feTurbulence');
+  n.setAttribute('type','fractalNoise');
+  n.setAttribute('baseFrequency','0.008');
+  n.setAttribute('numOctaves','1');
+  n.setAttribute('seed','2');
+  n.setAttribute('result','t');
+  const nAnim=document.createElementNS('http://www.w3.org/2000/svg','animate');
+  nAnim.setAttribute('attributeName','baseFrequency');
+  nAnim.setAttribute('values','0.006;0.012;0.006');
+  nAnim.setAttribute('dur','0.45s');
+  nAnim.setAttribute('repeatCount','indefinite');
+  n.appendChild(nAnim);
+
+  const d=document.createElementNS('http://www.w3.org/2000/svg','feDisplacementMap');
+  d.setAttribute('in','SourceGraphic');
+  d.setAttribute('in2','t');
+  d.setAttribute('scale','3');
+  d.setAttribute('xChannelSelector','R');
+  d.setAttribute('yChannelSelector','G');
+  const dAnim=document.createElementNS('http://www.w3.org/2000/svg','animate');
+  dAnim.setAttribute('attributeName','scale');
+  dAnim.setAttribute('values','2;4;2');
+  dAnim.setAttribute('dur','0.30s');
+  dAnim.setAttribute('repeatCount','indefinite');
+  d.appendChild(dAnim);
+
+  fWarp.appendChild(n);
+  fWarp.appendChild(d);
+
+  [fCore,fMid,fOuter,fWarp].forEach(f=>defs.appendChild(f));
+  svg.appendChild(defs);
+  fxLayer.appendChild(svg);
+  return svg;
+}
+
+function jitteredPolylineGame(points,iterations=3,roughness=16){
+  let pts=points.map(p=>[...p]);
+  for(let k=0;k<iterations;k++){
+    const next=[];
+    for(let i=0;i<pts.length-1;i++){
+      const [x1,y1]=pts[i],[x2,y2]=pts[i+1];
+      next.push([x1,y1]);
+      const mx=(x1+x2)/2,my=(y1+y2)/2,
+            nx=y2-y1, ny=-(x2-x1),
+            len=Math.hypot(nx,ny)||1,
+            ux=nx/len, uy=ny/len;
+      const amp=(Math.random()*2-1)*roughness*Math.pow(0.6,k);
+      next.push([mx+ux*amp,my+uy*amp]);
+    }
+    next.push(pts[pts.length-1]);
+    pts=next;
+  }
+  return pts;
+}
+function polylineLengthGame(pts){
+  let d=0;
+  for(let i=0;i<pts.length-1;i++){
+    const [x1,y1]=pts[i],[x2,y2]=pts[i+1];
+    d += Math.hypot(x2-x1,y2-y1);
+  }
+  return d;
+}
+function pointsToAttrGame(pts){ return pts.map(p=>p.join(',')).join(' '); }
+
+function drawBoltPath(cells){
+  if (!cells.length) return;
+  flashOn();
+  const svg  = ensureFxSvg();
+  const rect = fxLayer.getBoundingClientRect();
+
+  const points = cells.map(([r,c])=>{
+    const cellRect = cellAt(r,c).getBoundingClientRect();
+    return [
+      cellRect.left + cellRect.width/2 - rect.left,
+      cellRect.top  + cellRect.height/2 - rect.top
+    ];
+  });
+
+  const jag   = jitteredPolylineGame(points,3,16);
+  const total = polylineLengthGame(jag)+160;
+  const pAttr = pointsToAttrGame(jag);
+
+  const mk=(stroke,width,filter)=>{
+    const pl=document.createElementNS('http://www.w3.org/2000/svg','polyline');
+    pl.setAttribute('points',pAttr);
+    pl.setAttribute('fill','none');
+    pl.setAttribute('stroke',stroke);
+    pl.setAttribute('stroke-width',width);
+    pl.setAttribute('stroke-linejoin','round');
+    pl.setAttribute('stroke-linecap','round');
+    pl.setAttribute('filter',`url(#${filter})`);
+    pl.style.strokeDasharray=total;
+    pl.style.strokeDashoffset=total;
+    return pl;
+  };
+
+  const outer = mk('#6ff',9,'bolt-outer');
+  const mid   = mk('#cff',6,'bolt-mid');
+  const core  = mk('#fff',3,'bolt-core');
+
+  const g=document.createElementNS('http://www.w3.org/2000/svg','g');
+  g.appendChild(outer); g.appendChild(mid); g.appendChild(core);
+  g.setAttribute('filter','url(#bolt-warp)');
+  svg.appendChild(g);
+
+  const t0=performance.now(), dur=620;
+  function tick(t){
+    const k=Math.min(1,(t-t0)/dur);
+    const offs=(1-k)*total;
+    outer.style.strokeDashoffset=offs;
+    mid.style.strokeDashoffset=offs;
+    core.style.strokeDashoffset=offs;
+    if (k<1){
+      requestAnimationFrame(tick);
+    } else {
+      g.style.opacity='0.9';
+      setTimeout(()=>{ g.remove(); flashOff(); }, 200);
+    }
+  }
+  requestAnimationFrame(tick);
+}
+
+/* ===== Confetti ===== */
+function fireConfetti(){
+  confettiEl.innerHTML='';
+  const colours=['#ff4757','#2ed573','#1e90ff','#ffa502','#ff6b81','#a855f7'];
+  for(let i=0;i<90;i++){
+    const s=document.createElement('span');
+    s.style.left = (Math.random()*100)+'%';
+    s.style.setProperty('--c', colours[Math.floor(Math.random()*colours.length)]);
+    s.style.animationDelay = (Math.random()*0.9)+'s';
+    confettiEl.appendChild(s);
+  }
+}
+
+/* ===== Hit logic ===== */
+function randomUniqueCells(count){
+  const all=[];
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) all.push([r,c]);
+  for(let i=all.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [all[i],all[j]]=[all[j],all[i]];
+  }
+  return all.slice(0, count);
+}
+function rollNewNodeType(){
+  const roll = Math.random();
+  if (roll < 0.60) return 'credit';
+  if (roll < 0.80) return 'mult';
+  if (roll < 0.93) return 'chest';
+  return 'dead';
+}
+function makePlusLabel(text, kind, cellEl){
+  const lbl = document.createElement('div');
+  lbl.className = 'plus-label' + (kind ? (' '+kind) : '');
+  lbl.textContent = text;
+  const gridRect = gridEl.getBoundingClientRect();
+  const rect = cellEl.getBoundingClientRect();
+  lbl.style.left = (rect.left - gridRect.left + rect.width/2) + 'px';
+  lbl.style.top  = (rect.top  - gridRect.top + rect.height*0.28) + 'px';
+  gridEl.appendChild(lbl);
+  setTimeout(()=>lbl.remove(), 900);
+}
+
+async function doStrike(){
+  if (runningStrike || strikesLeft<=0 || finished) return;
+  runningStrike = true;
+  fredPulseAura(true);
+  playSfx(SOUND.strike);   // <- ADD
+
+  if (gridWrap){
+  gridWrap.classList.remove('charged'); // reset if previous animation was mid-way
+  // force reflow so animation restarts cleanly
+  void gridWrap.offsetWidth;
+  gridWrap.classList.add('charged');
+}
+
+  strikesLeft--;
+  strikesUsed++;
+  updateHud();
+  strikeBtn.disabled = true;
+
+  const hits = randomUniqueCells(PATH_HITS);
+
+  drawBoltPath(hits);
+  await sleep(650);
+
+  let chestBurst = 0;
+
+  for (const [r,c] of hits){
+    let data = board[r][c];
+    const cellEl = cellAt(r,c);
+
+    if (!data){
+      const type = rollNewNodeType();
+      if (type === 'credit'){
+        const value = CREDIT_MIN + Math.floor(Math.random()*(CREDIT_MAX-CREDIT_MIN+1));
+        data = {type:'credit', value, tier:1};
+        board[r][c] = data;
+        placeOrb(r,c,data,true);
+        playRandomBing();                        
+        makePlusLabel('+'+value,null,cellEl);
+      } else if (type === 'mult'){
+        multiplier = Math.min(MULT_MAX, multiplier+1);
+        data = {type:'mult', value:multiplier};
+        board[r][c] = data;
+        placeOrb(r,c,data,true);
+        playRandomBing();                        // <- ADD
+        playSfx(SOUND.multWhoosh);              // <- NEW MULT SOUND
+        makePlusLabel('MULT +1','mult',cellEl);
+      } else if (type === 'chest'){
+        data = {type:'chest', value:1};
+        board[r][c] = data;
+        placeOrb(r,c,data,true);
+        playRandomBing();                        // <- ADD
+        const burst = Math.round(currentWin()*CHEST_PCT);
+        if (burst>0){
+          chestBurst += burst;
+          makePlusLabel('+'+burst,'chest',cellEl);
+        } else {
+          makePlusLabel('CHEST','chest',cellEl);
+        }
+      } else if (type === 'dead'){
+        data = {type:'dead', value:0};
+        board[r][c] = data;
+        placeOrb(r,c,data,true);
+        makePlusLabel('—','dead',cellEl);
+      }
+    } else {
+      if (data.type === 'credit'){
+        const add = 1 + Math.floor(Math.random()*4);
+        data.value += add;
+        data.tier = Math.min(3, (data.tier||1) + 1);
+        placeOrb(r,c,data,true);
+        playSfx(SOUND.electricBuzz);              // <- CREDIT UPGRADE BUZZ
+        makePlusLabel('+'+add,null,cellEl);
+      } else if (data.type === 'mult'){
+        if (multiplier < MULT_MAX){
+          multiplier++;
+          data.value = multiplier;
+          placeOrb(r,c,data,true);
+          playSfx(SOUND.multWhoosh);             // <- MULT INCREASE
+          makePlusLabel('MULT +1','mult',cellEl);
+        } else {
+          data.type = 'credit';
+          data.value = 3;
+          data.tier = 1;
+          placeOrb(r,c,data,true);
+          playRandomBing();                      // <- NEW CREDIT ORB
+          makePlusLabel('+3',null,cellEl);
+        }
+      } else if (data.type === 'chest'){
+        const burst = Math.round(currentWin()*CHEST_PCT);
+        if (burst>0){
+          chestBurst += burst;
+          makePlusLabel('+'+burst,'chest',cellEl);
+        } else {
+          makePlusLabel('CHEST','chest',cellEl);
+        }
+      } else if (data.type === 'dead'){
+        placeOrb(r,c,data,true);
+        makePlusLabel('×','dead',cellEl);
+      }
+    }
+
+    recomputeBase();
+    let effectiveWin = currentWin();
+    if (chestBurst>0) effectiveWin += chestBurst;
+    winLabel.textContent = String(effectiveWin);
+    updateHud();
+
+    await sleep(260);
+  }
+
+  setTimeout(() => {
+    if (gridWrap) gridWrap.classList.remove('charged');
+  }, 800);
+
+  runningStrike = false;
+  fredPulseAura(false);
+
+  if (strikesLeft<=0){
+    await finishBonus();
+  } else {
+    strikeBtn.disabled = false;
+    fredSpeak('Another strike awaits. Aim for more flaming cores and chests.', 'standard', 2600);
+  }
+}
+
+/* ===== Final scoring ===== */
+async function finishBonus(){
+  finished = true;
+  strikeBtn.disabled = true;
+  fredPulseAura(true);
+
+  fredSpeak('Locking in your Storm Nodes vault\u2026','standard',2600);
+
+  const credits = [];
+  for(let r=0;r<ROWS;r++){
+    for(let c=0;c<COLS;c++){
+      const data = board[r][c];
+      if (data && data.type === 'credit'){
+        const cell = cellAt(r,c);
+        const orb  = cell.querySelector('.orb');
+        credits.push({cell,orb,data});
+      }
+    }
+  }
+
+  for (const entry of credits){
+    const {cell,orb,data} = entry;
+    if (!orb) continue;
+    orb.classList.add('final');
+    makePlusLabel('+'+data.value,null,cell);
+    await sleep(140);
+  }
+
+  fireConfetti();
+  const finalVault = currentWin();
+  winLabel.textContent = String(finalVault);
+  playSfx(SOUND.chestCoins);  fredSpeak(`You leave with ${finalVault} Storm Credits!`,'standard',3400);
+  setTimeout(()=> fredSpeak("Storm Nodes Bonus complete.",'goodbye',2600), 3600);
+  setTimeout(()=>{ closeCurtains(); }, 8400);
+
+  // ---- SHOW FINAL WIN OVERLAY ----
+const money = creditsToMoney(finalVault);
+const overlay = document.getElementById('finalWinOverlay');
+const msg     = document.getElementById('winMessage');
+const img     = document.getElementById('fredWinImg');
+
+// update content
+msg.textContent = `You won £${money}!`;
+img.src = avatars.win;
+img.classList.add("fred-win-bounce");
+
+// show overlay
+overlay.style.display = "flex";
+
+// optional: auto-close before curtains
+setTimeout(()=>{
+  overlay.style.display = "none";
+}, 4800);
+}
+
+/* ===== Game flow ===== */
+async function startBonusRound(){
+  resetBoard();
+  strikesLeft  = BASE_STRIKES;
+  strikesUsed  = 0;
+  totalBase    = 0;
+  multiplier   = MULT_START;
+  finished     = false;
+  recomputeBase();
+  updateHud();
+  strikeBtn.disabled = true;
+  fredPulseAura(false);
+
+  fredAvatar.src = avatars.standard;
+  fredAvatar.classList.add('show');
+  fredSpeak("Storm Nodes Bonus has begun. Watch each strike light up the grid.", "standard", 2600);
+
+  await sleep(1500);
+  subtitleEl.classList.add('show');
+  subtitleEl.textContent = "Press STRIKE to send a dramatic lightning chain across the grid.";
+  strikeBtn.disabled = false;
+}
+
+/* ===== Entry point ===== */
+async function runBonus(){
+  introIndex = 0;
+  introScreen.style.display = 'flex';
+  gameScreen.style.display  = 'none';
+  showIntroLine();
+  await openCurtains();
+
+  startAmbient();  // <- ADD THIS
+}
+
+/* ===== Events ===== */
+document.getElementById('triggerBonus').addEventListener('click', runBonus);
+introNextBtn.addEventListener('click', handleIntroNext);
+strikeBtn.addEventListener('click', ()=>{ if (!runningStrike && strikesLeft>0 && !finished) doStrike(); });
+</script>
+</body>
+</html>

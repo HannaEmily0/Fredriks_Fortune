@@ -1,0 +1,1537 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Fredrik's Fortune — 243 Ways</title>
+
+  <!-- fun font for centre text -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#020816;
+      --panel:#050f2b;
+      --panel-2:#050a22;
+      --panel-soft:#0a1535;
+      --cell-top:#0f1f49;
+      --cell-bottom:#091333;
+
+      --text:#f5f6ff;
+      --muted:#aab7ff;
+      --win:#a7f3d0;
+      --lose:#fca5a5;
+      --gold:#ffd166;
+      --shadow:0 26px 60px rgba(0,0,0,.75);
+      --radius:18px;
+
+      --ok:#35d48a;
+      --ok-d:#1aa867;
+    }
+
+    html,body{height:100%}
+
+    body{
+      margin:0;
+      font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,
+        "Apple Color Emoji","Segoe UI Emoji";
+      background:#000 url("background7fred.png") center center / cover no-repeat fixed;
+      color:var(--text);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+    }
+
+    .app{
+      width:min(1100px, 100%);
+    }
+
+    .card{
+      background:linear-gradient(
+        180deg,
+        rgba(5, 15, 43, 0.97),
+        rgba(4, 9, 34, 0.98)
+      );
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:20px 24px 22px;
+      position:relative;
+      z-index:1;
+      border:1px solid rgba(120,150,220,.35);
+    }
+
+    /* header kept just for semantic <h1>, no visual space */
+    header{
+      height:0;
+      margin:0;
+      padding:0;
+      overflow:hidden;
+    }
+
+    .sr-only{
+      position:absolute;
+      width:1px;
+      height:1px;
+      padding:0;
+      margin:-1px;
+      overflow:hidden;
+      clip:rect(0,0,0,0);
+      border:0;
+    }
+
+    /* Ghost button (Rules & History) */
+    .ghost-btn{
+      background:transparent;
+      color:var(--text);
+      border:1px solid rgba(255,255,255,.20);
+      padding:9px 16px;
+      border-radius:999px;
+      font-weight:800;
+      cursor:pointer;
+      font-size:13px;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      transition:
+        filter .18s ease,
+        background .18s ease,
+        border-color .18s ease;
+    }
+    .ghost-btn:hover{
+      background:rgba(16,29,70,.9);
+      border-color:rgba(255,255,255,.35);
+      filter:brightness(1.05);
+    }
+
+    .board{
+      position:relative;
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:10px;
+      padding:18px 18px 16px;
+      border-radius:22px;
+      background:radial-gradient(circle at top,
+                  rgba(19,37,88,.95),
+                  rgba(7,11,36,.98));
+      box-shadow:0 22px 40px rgba(0,0,0,.75);
+      overflow:hidden;
+    }
+
+    .reel{
+      display:grid;
+      grid-template-rows:repeat(3,1fr);
+      gap:10px;
+    }
+
+    .cell{
+      display:grid;
+      place-items:center;
+      height:88px;
+      min-width:100px;
+      border-radius:16px;
+      background:linear-gradient(180deg,var(--cell-top),var(--cell-bottom));
+      outline:1px solid rgba(63,86,144,.9);
+      box-shadow:
+        inset 0 8px 18px rgba(0,0,0,.66),
+        0 6px 14px rgba(0,0,0,.65);
+      font-size:42px;
+      user-select:none;
+      position:relative;
+    }
+
+    /* Fred head styling – smaller, glow */
+    .cell-fred{
+      filter:drop-shadow(0 0 10px rgba(255,230,150,.9));
+    }
+    .cell-fred img.fred-img{
+      width:56px;
+      height:auto;
+      display:block;
+    }
+    .cell-fred-bonus{
+      animation:fredBonusFlash .7s ease-out 0s 2;
+    }
+    @keyframes fredBonusFlash{
+      0%{
+        transform:scale(1);
+        filter:drop-shadow(0 0 18px rgba(255,245,205,1));
+      }
+      40%{
+        transform:scale(1.10);
+        filter:drop-shadow(0 0 30px rgba(255,255,220,1));
+      }
+      100%{
+        transform:scale(1);
+        filter:drop-shadow(0 0 10px rgba(255,230,160,.9));
+      }
+    }
+
+    .board::after{
+      content:"";
+      position:absolute;
+      inset:-100%;
+      background:conic-gradient(
+        from 0deg,
+        transparent 0 70%,
+        rgba(120,180,255,.14) 70% 75%,
+        transparent 75% 100%
+      );
+      opacity:.5;
+      animation:rotate 5s linear infinite;
+      pointer-events:none;
+    }
+    @keyframes rotate{ to{ transform:rotate(360deg);} }
+
+    .spinning .cell{
+      animation:spinPulse 350ms ease-in-out infinite;
+    }
+    @keyframes spinPulse{
+      0%,100%{ transform:translateY(0); filter:brightness(1);}
+      50%{ transform:translateY(4px); filter:brightness(1.18);}
+    }
+
+    /* ========== BOTTOM CONTROLS LAYOUT ========== */
+
+    /* bottom control bar layout */
+    .controls{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:24px;
+      margin-top:20px;
+    }
+
+    /* LEFT: balance + bet + spin/autospin + free spins badge */
+    .controls-left{
+      display:flex;
+      align-items:flex-start;
+      gap:14px;
+      flex:0 0 auto;
+    }
+
+    /* stat cards – vertically centred text & same height */
+    .stat{
+      background:radial-gradient(circle at top,
+              rgba(15,27,70,.96),
+              rgba(7,11,33,.98));
+      border-radius:16px;
+      padding:10px 14px;
+      min-width:130px;
+      height:64px;
+      border:1px solid rgba(80,104,170,.9);
+      box-shadow:0 10px 24px rgba(0,0,0,.7);
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      text-align:left;
+    }
+
+    .label{
+      font-size:11px;
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:.12em;
+      margin-bottom:2px;
+    }
+
+    .value{
+      font-weight:800;
+      font-size:18px;
+    }
+
+    /* spin + autospin cluster */
+    .spin-group{
+      display:flex;
+      align-items:flex-start;
+      gap:12px;
+      margin-top:4px;
+    }
+
+    .spin-stack{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-start;
+      gap:6px;
+    }
+
+    /* free-spins “button” that appears only when you have free spins */
+    .fs-pill{
+      display:none;
+      padding:6px 14px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.35);
+      background:rgba(19,37,88,.98);
+      color:var(--gold);
+      font-size:11px;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      font-weight:800;
+      cursor:default;
+    }
+
+    /* CENTER: fun last-result text + Fred avatar */
+    .controls-center{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      justify-content:flex-start;
+      align-items:center;
+      padding-top:10px;
+    }
+
+    .last-result{
+      font-family:'Playfair Display', serif;
+      font-size:16px;
+      letter-spacing:.09em;
+      text-transform:uppercase;
+      color:var(--muted);
+      white-space:nowrap;
+      margin-bottom:4px;
+    }
+    .last-result.win{  color:var(--gold); }  /* GOLD on win */
+    .last-result.lose{ color:var(--lose); }
+    .last-result.info{ color:var(--muted); }
+
+    /* Fred win avatar under the text */
+    .win-avatar{
+      display:none;          /* JS will toggle this */
+      height:80px;
+      pointer-events:none;
+    }
+    .win-avatar img{
+      height:100%;
+      width:auto;
+      display:block;
+      animation:fredJump 0.7s ease-in-out infinite;
+      transform-origin:50% 100%;
+      filter:drop-shadow(0 0 18px rgba(255,209,102,.9));
+    }
+
+    @keyframes fredJump{
+      0%   { transform:translateY(0) scale(1); }
+      35%  { transform:translateY(-10px) scale(1.02); }
+      70%  { transform:translateY(0) scale(1); }
+      100% { transform:translateY(0) scale(1); }
+    }
+
+    /* RIGHT: History + Rules row, mute below */
+    .controls-right{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+      gap:8px;
+      padding-top:4px;
+    }
+
+    .top-buttons{
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+    }
+
+    /* Spin button now gold to match logo */
+    .btn{
+      background:
+        radial-gradient(circle at 30% 20%, #fff5c0, #ffd56e 55%, #f4a623);
+      color:#301600;
+      border:0;
+      padding:14px 26px;
+      border-radius:999px;
+      font-weight:900;
+      letter-spacing:.13em;
+      font-size:13px;
+      text-transform:uppercase;
+      cursor:pointer;
+      box-shadow:
+        0 0 0 1px rgba(255,220,145,.45),
+        0 14px 38px rgba(0,0,0,.9);
+      transition:transform .08s ease, filter .18s ease, box-shadow .18s ease;
+    }
+    .btn:hover{
+      filter:brightness(1.06);
+      box-shadow:
+        0 0 0 1px rgba(255,230,170,.7),
+        0 18px 46px rgba(0,0,0,1);
+    }
+    .btn:active{
+      transform:translateY(1px);
+      box-shadow:
+        0 0 0 1px rgba(255,220,145,.8),
+        0 10px 22px rgba(0,0,0,.85);
+    }
+    .btn[disabled]{
+      filter:grayscale(.7) brightness(.75);
+      cursor:not-allowed;
+      box-shadow:none;
+    }
+
+    /* Autospin button */
+    .auto-btn{
+      background:rgba(6,16,45,.95);
+      color:var(--text);
+      border:1px solid rgba(100,130,210,.6);
+      padding:10px 18px;
+      border-radius:999px;
+      font-weight:800;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      font-size:12px;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      box-shadow:0 10px 22px rgba(0,0,0,.7);
+      transition:filter .18s ease, background .18s ease, border-color .18s ease;
+    }
+    .auto-btn:hover{
+      background:rgba(13,27,78,.95);
+      filter:brightness(1.04);
+      border-color:rgba(145,175,255,.95);
+    }
+    .auto-btn .dot{
+      width:8px;
+      height:8px;
+      border-radius:999px;
+      background:rgba(255,255,255,.3);
+      box-shadow:0 0 0 1px rgba(255,255,255,.18);
+    }
+    .auto-btn.on{
+      border-color:rgba(53,212,138,.9);
+      background:rgba(9,32,40,1);
+    }
+    .auto-btn.on .dot{
+      background:var(--ok);
+      box-shadow:0 0 12px var(--ok);
+    }
+
+    input[type=number]{
+      background:rgba(8,16,45,.96);
+      border:1px solid rgba(88,110,190,.85);
+      color:var(--text);
+      padding:10px 14px;
+      border-radius:12px;
+      width:110px;
+      font-weight:700;
+      box-shadow:inset 0 6px 12px rgba(0,0,0,.7);
+    }
+
+    /* small mute label */
+    .switch{
+      font-size:13px;
+      display:flex;
+      align-items:center;
+      gap:6px;
+      color:var(--muted);
+    }
+
+    /* Reel stop pop/glow */
+    .reel.stopped .cell{
+      animation:pop .28s ease-out both;
+      outline-color:rgba(255,209,102,.65);
+      box-shadow:
+        0 0 0 1px rgba(255,209,102,.35),
+        0 10px 22px rgba(255,209,102,.22);
+    }
+    @keyframes pop{
+      0%{ transform:scale(1); filter:brightness(1); }
+      45%{ transform:scale(1.14); filter:brightness(1.25); }
+      100%{ transform:scale(1); filter:brightness(1.07); }
+    }
+
+    /* Tease glow when Fred heads are in play */
+    .reel-tease-soft{
+      border-radius:16px;
+      animation:teasePulseSoft 0.7s ease-in-out infinite;
+    }
+    .reel-tease-strong{
+      border-radius:16px;
+      animation:teasePulseStrong 0.45s ease-in-out infinite;
+    }
+    @keyframes teasePulseSoft{
+      0%   { box-shadow:0 0 0 rgba(80,180,255,0); }
+      50%  { box-shadow:0 0 18px rgba(100,190,255,0.6),
+                       inset 0 0 10px rgba(120,210,255,0.45); }
+      100% { box-shadow:0 0 0 rgba(80,180,255,0); }
+    }
+    @keyframes teasePulseStrong{
+      0%   { box-shadow:0 0 0 rgba(80,180,255,0); }
+      50%  { box-shadow:0 0 28px rgba(120,220,255,1),
+                       inset 0 0 18px rgba(150,230,255,0.9); }
+      100% { box-shadow:0 0 0 rgba(80,180,255,0); }
+    }
+
+    /* winning emoji pop/glow */
+    .cell.win-hit{
+      animation:winPulse .45s ease-out 1;
+      filter:drop-shadow(0 0 12px rgba(255,255,150,.95));
+    }
+    @keyframes winPulse{
+      0%{transform:scale(1);}
+      35%{transform:scale(1.18);}
+      100%{transform:scale(1);}
+    }
+
+    /* FX layer for lightning & persistent flash */
+    .fx-layer{ position:absolute; inset:0; pointer-events:none; }
+    .fx-layer svg{ width:100%; height:100%; overflow:visible; }
+    .fx-flash{
+      position:absolute;
+      inset:0;
+      background:radial-gradient(ellipse at center,
+                 rgba(255,255,255,.55),
+                 rgba(255,255,255,0) 60%);
+      mix-blend-mode:screen;
+      opacity:0;
+      transition:opacity .08s ease;
+      pointer-events:none;
+    }
+
+    /* Big suspense: board zoom + dim when 2+ Fred heads are in play */
+    .board-suspense{
+      animation:boardZoomPulse 0.6s ease-in-out infinite alternate;
+    }
+    .board-suspense::before{
+      content:"";
+      position:absolute;
+      inset:-10px;
+      border-radius:inherit;
+      background:radial-gradient(circle at center,
+                 rgba(0,30,80,0.0),
+                 rgba(0,0,0,0.55));
+      pointer-events:none;
+      z-index:0;
+    }
+    @keyframes boardZoomPulse{
+      from{
+        transform:scale(1.00);
+        box-shadow:0 20px 40px rgba(0,0,0,0.55);
+      }
+      to{
+        transform:scale(1.04);
+        box-shadow:0 26px 70px rgba(0,0,0,0.9);
+      }
+    }
+
+    /* === HISTORY PANEL === */
+
+    .history-wrapper{
+      position:relative;
+      display:flex;
+      align-items:center;
+    }
+
+    .history-panel{
+      position:absolute;
+      right:0;
+      bottom:46px;
+      width:320px;
+      max-height:220px;
+      padding:10px 12px;
+      border-radius:14px;
+      background:radial-gradient(circle at top,
+                  rgba(7,18,52,.98),
+                  rgba(3,8,26,.99));
+      border:1px solid rgba(120,145,215,.9);
+      box-shadow:0 20px 46px rgba(0,0,0,.95);
+      font-size:13px;
+      overflow:auto;
+      display:none;
+      z-index:20;
+    }
+
+    .history-panel.open{
+      display:block;
+    }
+
+    .history-title{
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.14em;
+      color:var(--muted);
+      margin-bottom:6px;
+    }
+
+    .log{
+      max-height:190px;
+    }
+    .msg{ margin:2px 0; }
+    .msg.win{ color:var(--gold);}  /* gold in history too */
+    .msg.lose{ color:var(--lose);}
+    .msg.info{ color:var(--muted);}
+
+    /* Modal (Rules) */
+    .modal{ position:fixed; inset:0; display:none; z-index:50; }
+    .modal.open{ display:block; }
+    .modal-backdrop{
+      position:absolute; inset:0; backdrop-filter: blur(2px);
+      background: rgba(0,0,20,.45);
+    }
+    .modal-card{
+      position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+      width:min(720px, 92vw); max-height:85vh; overflow:auto;
+      background:linear-gradient(180deg, var(--panel), var(--panel-2));
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:16px;
+      box-shadow:var(--shadow);
+      padding:20px 22px 22px;
+    }
+    .modal-card h2{ margin:0 0 10px 0; font-size:22px; }
+    .modal-card h3{
+      margin:18px 0 8px;
+      font-size:15px;
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:.08em;
+    }
+    .modal-card ul{ margin:6px 0 10px 18px; }
+    .modal-card li{ margin:4px 0; }
+    .modal-close{
+      position:absolute;
+      right:10px; top:10px;
+      width:34px; height:34px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      font-weight:900;
+      cursor:pointer;
+    }
+    .rules-table{
+      width:100%;
+      border-collapse:collapse;
+      margin:6px 0 10px;
+      font-variant-numeric: tabular-nums;
+      font-size:14px;
+    }
+    .rules-table th, .rules-table td{
+      border:1px solid rgba(255,255,255,.12);
+      padding:8px 10px;
+      text-align:center;
+    }
+    .rules-table thead th{
+      background:rgba(255,255,255,.06);
+    }
+  </style>
+</head>
+<body>
+  <div class="app card">
+    <header>
+      <h1 class="sr-only">Fredrik's Fortune – 243 Ways</h1>
+    </header>
+
+    <div class="board" id="board">
+      <div class="reel" id="reel-0"></div>
+      <div class="reel" id="reel-1"></div>
+      <div class="reel" id="reel-2"></div>
+      <div class="reel" id="reel-3"></div>
+      <div class="reel" id="reel-4"></div>
+      <div class="fx-layer" id="fx"></div>
+    </div>
+
+    <!-- ========== BOTTOM CONTROLS ========== -->
+    <div class="controls">
+      <!-- LEFT: Balance, Bet, Spin, Autospin, Free-Spins pill -->
+      <div class="controls-left">
+        <div class="stat">
+          <div class="label">Balance</div>
+          <div class="value" id="balance">£100.00</div>
+        </div>
+
+        <div class="stat">
+          <div class="label">Bet</div>
+          <div class="value">
+            <input id="bet" type="number" step="0.5" min="0.5" max="10" value="1.0">
+          </div>
+        </div>
+
+        <div class="spin-group">
+          <div class="spin-stack">
+            <button class="btn" id="spin">Spin</button>
+            <!-- appears only when you actually HAVE free spins -->
+            <button class="fs-pill" id="fs-pill" type="button" disabled>Free Spins</button>
+          </div>
+
+          <button class="auto-btn" id="auto" aria-pressed="false">
+            <span class="dot"></span>Autospin
+          </button>
+        </div>
+      </div>
+
+      <!-- CENTER: fun text / last result + win avatar -->
+      <div class="controls-center">
+        <div id="last-result" class="last-result">Ready to spin.</div>
+        <div id="win-avatar" class="win-avatar">
+          <img src="avatar_fred_win.png" alt="Fred celebrating a win">
+        </div>
+      </div>
+
+      <!-- RIGHT: History + Rules on same row, Mute underneath -->
+      <div class="controls-right">
+        <div class="top-buttons">
+          <div class="history-wrapper">
+            <button class="ghost-btn" id="history-btn" type="button">History</button>
+            <div class="history-panel" id="history-panel" aria-hidden="true">
+              <div class="history-title">Previous spins</div>
+              <div class="log" id="log"></div>
+            </div>
+          </div>
+
+          <button class="ghost-btn" id="rules-btn" type="button">Rules</button>
+        </div>
+
+        <label class="switch">
+          <input type="checkbox" id="mute"> Mute
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rules Modal -->
+  <div class="modal" id="rules-modal" aria-hidden="true" role="dialog" aria-labelledby="rules-title">
+    <div class="modal-backdrop" data-close="rules"></div>
+    <div class="modal-card" role="document">
+      <button class="modal-close" data-close="rules" aria-label="Close">✕</button>
+      <h2 id="rules-title">How to Play</h2>
+      <div class="modal-content">
+        <h3>Game Overview</h3>
+        <ul>
+          <li>Grid: <strong>5 reels × 3 rows</strong>.</li>
+          <li><strong>243 Ways</strong> to win — any matching symbol on <strong>consecutive reels from the left</strong> counts, regardless of exact row.</li>
+          <li>You need <strong>3 or more consecutive reels</strong> with the same symbol to get a win.</li>
+        </ul>
+
+        <h3>Regular Symbols & Payouts<br><small>(per £1.00 bet)</small></h3>
+        <p>Wins scale proportionally with your bet size.</p>
+        <table class="rules-table">
+          <thead>
+            <tr>
+              <th>Symbol</th>
+              <th>3 in a row</th>
+              <th>4 in a row</th>
+              <th>5 in a row</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>🫐</td><td>0.45×</td><td>2.00×</td><td>8×</td></tr>
+            <tr><td>🍒</td><td>0.50×</td><td>2.40×</td><td>9×</td></tr>
+            <tr><td>🍉</td><td>0.55×</td><td>2.80×</td><td>9.5×</td></tr>
+            <tr><td>🍋</td><td>0.65×</td><td>3.30×</td><td>11×</td></tr>
+            <tr><td>🔔</td><td>1.00×</td><td>5.50×</td><td>22×</td></tr>
+            <tr><td>⭐️</td><td>1.70×</td><td>11.5×</td><td>45×</td></tr>
+          </tbody>
+        </table>
+        <ul>
+          <li>If the same symbol appears on multiple positions on a reel, it still counts as <strong>one reel</strong> for the ways win.</li>
+        </ul>
+
+        <h3>Scatters – Free Spins (🎰)</h3>
+        <ul>
+          <li>Scatters pay <strong>anywhere</strong> on the grid (they don’t need to be in order).</li>
+          <li>Pays per bet: <strong>3 = 1.2×</strong>, <strong>4 = 5×</strong>, <strong>5 = 18×</strong> your stake.</li>
+          <li>Hitting <strong>3 or more scatters</strong> awards <strong>+6 Free Spins</strong>.</li>
+        </ul>
+
+        <h3>Free Spins</h3>
+        <ul>
+          <li>All wins during Free Spins are boosted by a <strong>x3 multiplier</strong>.</li>
+          <li>Your balance is <strong>not deducted</strong> while a Free Spin is playing.</li>
+          <li>Additional scatters during Free Spins can award <strong>more Free Spins</strong>.</li>
+        </ul>
+
+        <h3>Fred Bonus Symbol</h3>
+        <ul>
+          <li>Fred’s head appears as a glowing special symbol on the reels.</li>
+          <li>It does <strong>not pay regular symbol wins</strong> on the ways system.</li>
+          <li>Landing <strong>3 or more Fred heads anywhere</strong> in a single spin will <strong>trigger the Bonus Game</strong>.</li>
+          <li>When triggered, the bonus game opens in a <strong>new tab/window</strong>.</li>
+        </ul>
+
+        <h3>Bet & Controls</h3>
+        <ul>
+          <li>Bet range: <strong>£0.50 – £10.00</strong>.</li>
+          <li><strong>Spin</strong> plays a single round at your selected bet.</li>
+          <li><strong>Autospin</strong> repeats spins until you stop it or you run out of funds.</li>
+          <li><strong>Mute</strong> toggles all game sounds.</li>
+          <li>Lightning, glow effects and animations are <strong>visual only</strong> and don’t change the odds.</li>
+        </ul>
+      </div>
+              <!-- very discreet bonus shortcut -->
+        <div style="margin-top:8px; text-align:right;">
+          <button
+            id="secret-bonus-btn"
+            type="button"
+            style="
+              background:transparent;
+              border:0;
+              padding:0;
+              font-size:10px;
+              letter-spacing:.16em;
+              text-transform:uppercase;
+              opacity:.25;
+              cursor:pointer;
+              color:var(--muted);
+            "
+          >
+            bonus shortcut
+          </button>
+        </div>
+    </div>
+  </div>
+
+  <script>
+/* ====== GAME CONFIG ====== */
+const CHERRY="🍒",
+      MELON="🍉",
+      LEMON="🍋",
+      BLUE="🫐",
+      BELL="🔔",
+      STAR="⭐️",
+      SCAT="🎰",
+      FRED="FRED";  // logical ID for Fred head
+const FRED_IMG_SRC = "avatar_fred_head.png";
+
+const PAYING_SYMBOLS=[BLUE, CHERRY, MELON, LEMON, BELL, STAR];
+
+const PAYTABLE={
+  [BLUE]:  {3:0.45,4:2.00,5:8},
+  [CHERRY]:{3:0.50,4:2.40,5:9},
+  [MELON]: {3:0.55,4:2.80,5:9.5},
+  [LEMON]: {3:0.65,4:3.30,5:11},
+  [BELL]:  {3:1.00,4:5.50,5:22},
+  [STAR]:  {3:1.70,4:11.5,5:45},
+};
+
+let SCATTER_PAY={3:1.2,4:5,5:18};
+const FREE_SPINS_AWARD=6, FREE_SPIN_MULT=3, REELS=5, ROWS=3;
+
+/* ====== STRIPS ====== */
+function makeStrip(counts){
+  const strip=[];
+  for(const [sym,n] of Object.entries(counts)){
+    for(let i=0;i<n;i++) strip.push(sym);
+  }
+  for(let i=strip.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [strip[i],strip[j]]=[strip[j],strip[i]];
+  }
+  return strip;
+}
+
+const REEL_STRIPS=[
+  makeStrip({[CHERRY]:9,[MELON]:9,[LEMON]:8,[BLUE]:9,[BELL]:5,[STAR]:3,[SCAT]:2,[FRED]:2}),
+  makeStrip({[CHERRY]:10,[MELON]:9,[LEMON]:8,[BLUE]:9,[BELL]:5,[STAR]:3,[FRED]:2}),
+  makeStrip({[CHERRY]:9,[MELON]:10,[LEMON]:8,[BLUE]:9,[BELL]:5,[STAR]:4,[SCAT]:2,[FRED]:2}),
+  makeStrip({[CHERRY]:10,[MELON]:9,[LEMON]:8,[BLUE]:9,[BELL]:5,[STAR]:3,[FRED]:2}),
+  makeStrip({[CHERRY]:9,[MELON]:9,[LEMON]:8,[BLUE]:9,[BELL]:5,[STAR]:4,[SCAT]:2,[FRED]:2}),
+];
+
+function spinWindow(){
+  const win=[...Array(ROWS)].map(()=>Array(REELS).fill(null));
+  for(let c=0;c<REELS;c++){
+    const strip=REEL_STRIPS[c];
+    const start=Math.floor(Math.random()*strip.length);
+    for(let r=0;r<ROWS;r++){
+      win[r][c]=strip[(start+r)%strip.length];
+    }
+  }
+  return win;
+}
+
+function presencePerReel(win, target){
+  const pres=[];
+  for(let c=0;c<REELS;c++){
+    const col=[win[0][c],win[1][c],win[2][c]];
+    pres.push(col.includes(target)?1:0);
+  }
+  return pres;
+}
+
+function evaluateWays(win, bet, multiplier=1.0){
+  let total=0;
+  const breakdown=[];
+
+  for(const sym of PAYING_SYMBOLS){
+    const pres=presencePerReel(win, sym);
+    let consec=0;
+    for(const p of pres){
+      if(p===1) consec++;
+      else break;
+    }
+    if(consec>=3){
+      const mult=PAYTABLE[sym][consec];
+      const amt=mult*bet*multiplier;
+      total+=amt;
+      breakdown.push({sym,count:consec,ways:1,amt});
+    }
+  }
+
+  let scatters=0;
+  for(let r=0;r<ROWS;r++){
+    for(let c=0;c<REELS;c++){
+      if(win[r][c]===SCAT) scatters++;
+    }
+  }
+  let scatterPay=0;
+  for(const [needS,mult] of Object.entries(SCATTER_PAY)){
+    const need=+needS;
+    if(scatters>=need){
+      scatterPay=Math.max(scatterPay, mult*bet*multiplier);
+    }
+  }
+  if(scatterPay>0){
+    total+=scatterPay;
+    breakdown.push({sym:'SCAT',count:scatters,ways:1,amt:scatterPay});
+  }
+
+  return {total, breakdown, scatters};
+}
+
+/* ====== AUDIO ====== */
+const audio={
+  spinner:new Audio('spinner.mp3'),
+  win:new Audio('win.mp3'),
+  bgm:new Audio('bgm.mp3'),
+  thunder:new Audio('thunder.mp3')
+};
+audio.spinner.loop=true; audio.spinner.volume=.35;
+audio.win.volume=.9; audio.bgm.loop=true; audio.bgm.volume=.25;
+audio.thunder.volume=.55;
+
+let isMuted=false, audioUnlocked=false;
+function unlockAudio(){
+  if(audioUnlocked) return;
+  Object.values(audio).forEach(a=>{
+    try{
+      a.play().then(()=>a.pause()).catch(()=>{});
+    }catch{}
+  });
+  audioUnlocked=true;
+}
+function fadeTo(aud,target,ms=400){
+  const steps=16, dt=ms/steps, start=aud.volume, diff=target-start; let i=0;
+  const id=setInterval(()=>{
+    i++;
+    aud.volume=Math.max(0,Math.min(1,start+diff*(i/steps)));
+    if(i>=steps) clearInterval(id);
+  }, dt);
+}
+function play(a){ try{ a.currentTime=0; a.play(); }catch{} }
+function stop(a){ try{ a.pause(); a.currentTime=0; }catch{} }
+
+function makeSfx(src,{volume=1,size=8}={}){
+  const list=Array.from({length:size},()=>{
+    const a=new Audio(src);
+    a.preload='auto';
+    a.volume=volume;
+    a.muted=isMuted;
+    return a;
+  });
+  let i=0;
+  return ()=>{
+    if(isMuted) return;
+    const a=list[i];
+    i=(i+1)%list.length;
+    try{ a.currentTime=0; a.play(); }catch{}
+  };
+}
+const playStop=makeSfx('stop1.mp3',{volume:.6,size:8});
+
+/* ====== UI ELEMENTS ====== */
+const q=s=>document.querySelector(s);
+const reelsEls=[...Array(REELS)].map((_,i)=>q('#reel-'+i));
+const boardEl=q('#board'),
+      spinBtn=q('#spin'),
+      autoBtn=q('#auto'),
+      balEl=q('#balance');
+const betEl=q('#bet'),
+      fsPill=q('#fs-pill'),
+      logEl=q('#log'),
+      muteEl=q('#mute');
+
+const historyBtn=document.getElementById('history-btn');
+const historyPanel=document.getElementById('history-panel');
+const winAvatar=document.getElementById('win-avatar');   // NEW
+
+/* free-spin pill visibility */
+let balance=100.00, freeSpins=0, lastBet=1.0;
+let isSpinning=false, autoOn=false;
+
+function updateFreeSpinPill(){
+  if (!fsPill) return;
+  if (freeSpins > 0){
+    fsPill.style.display = 'inline-flex';
+    fsPill.textContent =
+      freeSpins + ' Free Spin' + (freeSpins > 1 ? 's' : '');
+  } else {
+    fsPill.style.display = 'none';
+  }
+}
+updateFreeSpinPill();   // hidden at start
+
+const AUTO_DELAY_MS = 900;
+
+function money(x){ return '£'+x.toFixed(2); }
+
+function msg(text, cls='info'){
+  const p=document.createElement('div');
+  p.className='msg '+cls;
+  p.textContent=text;
+  logEl.prepend(p);
+}
+
+/* update the “last result” centre text + avatar visibility */
+function setLastResult(text, cls='info'){
+  const el = document.getElementById('last-result');
+  if (!el) return;
+  el.className = 'last-result ' + cls;
+  el.textContent = text;
+
+  if (winAvatar){
+    if (cls === 'win'){
+      winAvatar.style.display = 'block';
+    } else {
+      winAvatar.style.display = 'none';
+    }
+  }
+}
+
+/* Render helper so Fred uses <img> and glow */
+function renderCellEl(cellEl, sym){
+  cellEl.classList.remove('cell-fred','cell-fred-bonus');
+  cellEl.innerHTML = "";
+  if(sym === FRED){
+    cellEl.classList.add('cell-fred');
+    const img = document.createElement('img');
+    img.src = FRED_IMG_SRC;
+    img.alt = "Fred bonus symbol";
+    img.className = "fred-img";
+    cellEl.appendChild(img);
+  } else {
+    cellEl.textContent = sym;
+  }
+}
+
+function setCells(win){
+  for(let c=0;c<REELS;c++){
+    const col=reelsEls[c];
+    col.innerHTML='';
+    for(let r=0;r<ROWS;r++){
+      const cell=document.createElement('div');
+      cell.className='cell';
+      renderCellEl(cell, win[r][c]);
+      col.appendChild(cell);
+    }
+  }
+}
+setCells(spinWindow());
+
+muteEl.addEventListener('change', ()=>{
+  isMuted = muteEl.checked;
+  Object.values(audio).forEach(a=> a.muted=isMuted);
+});
+
+/* reel stop pop */
+function popReel(colEl){
+  colEl.classList.add('stopped');
+  setTimeout(()=> colEl.classList.remove('stopped'), 320);
+}
+
+/* ====== LIGHTNING FX ====== */
+const fxEl = document.getElementById('fx');
+function clearFx(){
+  fxEl.querySelectorAll('g').forEach(g=>{
+    if (g.__flickerId) {
+      clearInterval(g.__flickerId);
+      delete g.__flickerId;
+    }
+  });
+  fxEl.innerHTML = '';
+}
+function getFlash(){
+  let f=fxEl.querySelector('.fx-flash');
+  if(!f){
+    f=document.createElement('div');
+    f.className='fx-flash';
+    fxEl.appendChild(f);
+  }
+  return f;
+}
+function flashOn(){ getFlash().style.opacity='1'; }
+function flashOff(){ getFlash().style.opacity='0'; }
+
+function ensureFxSvg(){
+  let svg = fxEl.querySelector('svg[data-fx]');
+  if (svg) return svg;
+  svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('data-fx','1');
+  svg.setAttribute('width','100%');
+  svg.setAttribute('height','100%');
+
+  const defs=document.createElementNS('http://www.w3.org/2000/svg','defs');
+
+  const fCore=document.createElementNS('http://www.w3.org/2000/svg','filter'); fCore.id='bolt-core';
+  fCore.innerHTML=`<feGaussianBlur in="SourceGraphic" stdDeviation="0.6" result="b1"/>
+                   <feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="b1"/></feMerge>`;
+  const fMid=document.createElementNS('http://www.w3.org/2000/svg','filter'); fMid.id='bolt-mid';
+  fMid.innerHTML=`<feGaussianBlur in="SourceGraphic" stdDeviation="2.2" result="b2"/>
+                  <feColorMatrix type="matrix"
+                    values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 .9 0" result="b2a"/>
+                  <feMerge><feMergeNode in="b2a"/></feMerge>`;
+  const fOuter=document.createElementNS('http://www.w3.org/2000/svg','filter'); fOuter.id='bolt-outer';
+  fOuter.innerHTML=`<feGaussianBlur in="SourceGraphic" stdDeviation="5.5" result="b3"/>
+                    <feColorMatrix type="matrix"
+                      values="0.7 0 0 0 0  0 0.9 0 0 0  0.9 0.9 1 0 0  0 0 0 .7 0" result="b3a"/>
+                    <feMerge><feMergeNode in="b3a"/></feMerge>`;
+
+  const fWarp=document.createElementNS('http://www.w3.org/2000/svg','filter'); fWarp.id='bolt-warp';
+  fWarp.setAttribute('x','-20%'); fWarp.setAttribute('y','-20%');
+  fWarp.setAttribute('width','140%'); fWarp.setAttribute('height','140%');
+  const n=document.createElementNS('http://www.w3.org/2000/svg','feTurbulence');
+  n.setAttribute('type','fractalNoise');
+  n.setAttribute('baseFrequency','0.008');
+  n.setAttribute('numOctaves','1');
+  n.setAttribute('seed','2');
+  n.setAttribute('result','t');
+  const nAnim=document.createElementNS('http://www.w3.org/2000/svg','animate');
+  nAnim.setAttribute('attributeName','baseFrequency');
+  nAnim.setAttribute('values','0.006;0.012;0.006');
+  nAnim.setAttribute('dur','0.45s');
+  nAnim.setAttribute('repeatCount','indefinite');
+  n.appendChild(nAnim);
+  const d=document.createElementNS('http://www.w3.org/2000/svg','feDisplacementMap');
+  d.setAttribute('in','SourceGraphic');
+  d.setAttribute('in2','t');
+  d.setAttribute('scale','3');
+  d.setAttribute('xChannelSelector','R');
+  d.setAttribute('yChannelSelector','G');
+  const dAnim=document.createElementNS('http://www.w3.org/2000/svg','animate');
+  dAnim.setAttribute('attributeName','scale');
+  dAnim.setAttribute('values','2;4;2');
+  dAnim.setAttribute('dur','0.30s');
+  dAnim.setAttribute('repeatCount','indefinite');
+  d.appendChild(dAnim);
+  fWarp.appendChild(n);
+  fWarp.appendChild(d);
+
+  [fCore,fMid,fOuter,fWarp].forEach(x=>defs.appendChild(x));
+  svg.appendChild(defs);
+  fxEl.appendChild(svg);
+  return svg;
+}
+
+function cellCenter(colIndex,rowIndex){
+  const boardRect=boardEl.getBoundingClientRect();
+  const cellEl=reelsEls[colIndex].querySelectorAll('.cell')[rowIndex];
+  const r=cellEl.getBoundingClientRect();
+  return [r.left+r.width/2-boardRect.left, r.top+r.height/2-boardRect.top];
+}
+
+function jitteredPolyline(points,iterations=3,roughness=18){
+  let pts=points.map(p=>[...p]);
+  for(let k=0;k<iterations;k++){
+    const next=[];
+    for(let i=0;i<pts.length-1;i++){
+      const [x1,y1]=pts[i],[x2,y2]=pts[i+1];
+      next.push([x1,y1]);
+      const mx=(x1+x2)/2,my=(y1+y2)/2,
+            nx=y2-y1,ny=-(x2-x1),
+            len=Math.hypot(nx,ny)||1,
+            ux=nx/len,uy=ny/len;
+      const amp=(Math.random()*2-1)*roughness*Math.pow(0.6,k);
+      next.push([mx+ux*amp,my+uy*amp]);
+    }
+    next.push(pts[pts.length-1]);
+    pts=next;
+  }
+  return pts;
+}
+
+function polylineLength(pts){
+  let d=0;
+  for(let i=0;i<pts.length-1;i++){
+    const [x1,y1]=pts[i],[x2,y2]=pts[i+1];
+    d+=Math.hypot(x2-x1,y2-y1);
+  }
+  return d;
+}
+
+function pointsToAttr(pts){ return pts.map(p=>p.join(',')).join(' '); }
+
+function makeBranch(basePts,scale=0.33){
+  if(basePts.length<3) return null;
+  const idx=1+Math.floor(Math.random()*(basePts.length-2));
+  const [bx,by]=basePts[idx];
+  const ang=(Math.random()<0.5?-1:1)*(Math.PI/6+Math.random()*Math.PI/8);
+  const len=40+Math.random()*70;
+  const pt2=[bx+Math.cos(ang)*len*scale, by+Math.sin(ang)*len*scale];
+  return jitteredPolyline([[bx,by],pt2],2,10);
+}
+
+function drawBoltPersistent(points){
+  const svg=ensureFxSvg();
+  const g=document.createElementNS('http://www.w3.org/2000/svg','g');
+  const jag=jitteredPolyline(points,3,18);
+  const total=polylineLength(jag)+120;
+  const pAttr=pointsToAttr(jag);
+
+  const mk=(stroke,width,filter)=>{
+    const pl=document.createElementNS('http://www.w3.org/2000/svg','polyline');
+    pl.setAttribute('points',pAttr);
+    pl.setAttribute('fill','none');
+    pl.setAttribute('stroke',stroke);
+    pl.setAttribute('stroke-width',width);
+    pl.setAttribute('stroke-linejoin','round');
+    pl.setAttribute('stroke-linecap','round');
+    pl.setAttribute('filter',`url(#${filter})`);
+    pl.style.strokeDasharray=total;
+    pl.style.strokeDashoffset=total;
+    return pl;
+  };
+
+  const outer=mk('#6ff',9,'bolt-outer'),
+        mid=mk('#cff',6,'bolt-mid'),
+        core=mk('#fff',3,'bolt-core');
+  g.appendChild(outer);
+  g.appendChild(mid);
+  g.appendChild(core);
+
+  const branches=[];
+  const b1=makeBranch(jag),
+        b2=Math.random()<0.6?makeBranch(jag,0.5):null;
+  [b1,b2].forEach(bp=>{
+    if(!bp) return;
+    const L=polylineLength(bp)+40;
+    const pl=document.createElementNS('http://www.w3.org/2000/svg','polyline');
+    pl.setAttribute('points',pointsToAttr(bp));
+    pl.setAttribute('fill','none');
+    pl.setAttribute('stroke','#eef');
+    pl.setAttribute('stroke-width','2');
+    pl.setAttribute('stroke-linecap','round');
+    pl.setAttribute('filter','url(#bolt-mid)');
+    pl.style.strokeDasharray=L;
+    pl.style.strokeDashoffset=L;
+    branches.push({pl,L});
+    g.appendChild(pl);
+  });
+
+  g.setAttribute('filter','url(#bolt-warp)');
+  svg.appendChild(g);
+
+  const t0=performance.now(), dur=220;
+  function tick(t){
+    const k=Math.min(1,(t-t0)/dur);
+    const offs=(1-k)*total;
+    outer.style.strokeDashoffset=offs;
+    mid.style.strokeDashoffset=offs;
+    core.style.strokeDashoffset=offs;
+    branches.forEach(({pl,L})=> pl.style.strokeDashoffset=(1-k)*L);
+    if(k<1) requestAnimationFrame(tick);
+    else{
+      g.style.opacity='0.9';
+      const flicker=setInterval(()=>{
+        g.style.opacity=(0.85+Math.random()*0.15).toFixed(3);
+      },90);
+      g.__flickerId=flicker;
+    }
+  }
+  requestAnimationFrame(tick);
+}
+
+function lightningStrikeExact(windowMatrix,sym,consec){
+  const pts=[];
+  let prevY=null;
+  for(let c=0;c<consec;c++){
+    const rows=[];
+    for(let r=0;r<ROWS;r++){
+      if(windowMatrix[r][c]===sym) rows.push(r);
+    }
+    let pick=rows[0]??1;
+    if(prevY!==null && rows.length>1){
+      let best=rows[0], bestDist=Infinity;
+      for(const r of rows){
+        const [,y]=cellCenter(c,r);
+        const d=Math.abs(y-prevY);
+        if(d<bestDist){best=r; bestDist=d;}
+      }
+      pick=best;
+    }
+    const [x,y]=cellCenter(c,pick);
+    pts.push([x,y]);
+    prevY=y;
+  }
+  if(!pts.length) return;
+  flashOn();
+  drawBoltPersistent(pts);
+}
+
+/* ====== SPIN CORE ====== */
+async function spin(){
+  if (isSpinning) return;
+  isSpinning = true;
+  unlockAudio();
+
+  clearFx();
+
+  reelsEls.forEach(reel =>
+    reel.classList.remove('reel-tease-soft','reel-tease-strong')
+  );
+  if(audio.bgm.paused && !isMuted) play(audio.bgm);
+
+  let fredCountSoFar = 0;
+
+  const bet=parseFloat(betEl.value||'1');
+  if(bet<0.5||bet>10){
+    msg('Bet must be 0.5–10','info');
+    isSpinning=false;
+    return;
+  }
+
+  let fsMult=1.0;
+  if(freeSpins>0){
+    fsMult = FREE_SPIN_MULT;
+    freeSpins -= 1;
+    updateFreeSpinPill();
+  } else {
+    if(bet>balance){
+      msg('Insufficient funds','lose');
+      isSpinning=false;
+      return;
+    }
+    balance-=bet;
+    lastBet=bet;
+    balEl.textContent=money(balance);
+  }
+
+  spinBtn.disabled=true;
+  boardEl.classList.add('spinning');
+  if(!isMuted){
+    play(audio.spinner);
+    fadeTo(audio.bgm,.15,400);
+  }
+
+  const tempIntervals=[];
+  const TEMP_SYMBOLS=[BLUE, CHERRY, MELON, LEMON, BELL, STAR, SCAT, FRED];
+  for(let c=0;c<REELS;c++){
+    tempIntervals[c]=setInterval(()=>{
+      const tmp=TEMP_SYMBOLS[Math.floor(Math.random()*TEMP_SYMBOLS.length)];
+      reelsEls[c].querySelectorAll('.cell').forEach(el=> renderCellEl(el, tmp));
+    },60);
+  }
+
+  const finalWin = spinWindow();
+
+  for (let c = 0; c < REELS; c++) {
+    const reelsLeftIncludingThis = REELS - c;
+
+    let baseDelay = 250 + c * 220;
+
+    if (fredCountSoFar >= 1 && fredCountSoFar < 3 && reelsLeftIncludingThis > 1) {
+      baseDelay += 200;
+    }
+    if (fredCountSoFar >= 2 && reelsLeftIncludingThis === 1) {
+      baseDelay += 700;
+    }
+
+    await new Promise(res => setTimeout(res, baseDelay));
+    clearInterval(tempIntervals[c]);
+
+    for (let r = 0; r < ROWS; r++) {
+      const cell = reelsEls[c].querySelectorAll('.cell')[r];
+      renderCellEl(cell, finalWin[r][c]);
+    }
+
+    for (let r = 0; r < ROWS; r++) {
+      if (finalWin[r][c] === FRED) {
+        fredCountSoFar++;
+      }
+    }
+
+    const reelsLeftAfterThis = REELS - c - 1;
+
+    reelsEls.forEach((reelEl, idx) => {
+      reelEl.classList.remove('reel-tease-soft', 'reel-tease-strong');
+      if (idx > c) {
+        if (fredCountSoFar === 1) {
+          reelEl.classList.add('reel-tease-soft');
+        } else if (fredCountSoFar >= 2) {
+          reelEl.classList.add('reel-tease-strong');
+        }
+      }
+    });
+
+    if (fredCountSoFar >= 2 && reelsLeftAfterThis >= 1) {
+      boardEl.classList.add('board-suspense');
+    } else if (reelsLeftAfterThis === 0) {
+      boardEl.classList.remove('board-suspense');
+    }
+
+    playStop();
+    popReel(reelsEls[c]);
+  }
+
+  reelsEls.forEach(reel =>
+    reel.classList.remove('reel-tease-soft','reel-tease-strong')
+  );
+  boardEl.classList.remove('board-suspense');
+
+  boardEl.classList.remove('spinning');
+  if(!isMuted){
+    stop(audio.spinner);
+    fadeTo(audio.bgm,.25,350);
+  }
+
+  const { total, breakdown, scatters } =
+    evaluateWays(finalWin, lastBet, fsMult);
+
+  let fredCount=0;
+  const fredCells=[];
+  for(let r=0;r<ROWS;r++){
+    for(let c=0;c<REELS;c++){
+      if(finalWin[r][c]===FRED){
+        fredCount++;
+        fredCells.push(reelsEls[c].querySelectorAll('.cell')[r]);
+      }
+    }
+  }
+  if(fredCount>=3){
+    msg(`BONUS TRIGGERED! ${fredCount} Fred heads → launching bonus game...`,'info');
+    fredCells.forEach(cell=>{
+      cell.classList.add('cell-fred-bonus');
+      setTimeout(()=> cell.classList.remove('cell-fred-bonus'), 1400);
+    });
+    setTimeout(()=>{ window.open('bonus.html','_blank'); }, 700);
+  }
+
+  if(scatters>=3){
+    freeSpins += FREE_SPINS_AWARD;
+    updateFreeSpinPill();
+    msg(`BONUS! ${scatters} scatters → +${FREE_SPINS_AWARD} Free Spins`, 'info');
+  }
+
+  if(total>0){
+    balance+=total;
+    balEl.textContent = money(balance);
+    if(!isMuted) play(audio.win);
+
+    const summary = `You won ${money(total)} (mult x${fsMult})`;
+    msg(summary, 'win');
+    setLastResult(summary, 'win');
+
+    let playedThunder=false;
+    breakdown.forEach(b=>{
+      if(b.sym!=='SCAT'){
+        for(let c=0;c<b.count;c++){
+          for(let r=0;r<ROWS;r++){
+            if(finalWin[r][c]===b.sym){
+              const el=reelsEls[c].querySelectorAll('.cell')[r];
+              el.classList.add('win-hit');
+              setTimeout(()=>el.classList.remove('win-hit'),550);
+            }
+          }
+        }
+        lightningStrikeExact(finalWin, b.sym, b.count);
+        if(!playedThunder && !isMuted){
+          try{ audio.thunder.currentTime=0; audio.thunder.play(); }catch{}
+          playedThunder=true;
+        }
+        msg(`  ${b.sym} ${b.count}-of-a-kind → ${money(b.amt)}`, 'win');
+      } else {
+        msg(`  Scatter ${b.count} → ${money(b.amt)}`, 'win');
+      }
+    });
+  } else {
+    msg('No win','lose');
+    setLastResult('No win','lose');
+    flashOff();
+  }
+
+  spinBtn.disabled=false;
+  boardEl.classList.remove('board-suspense');
+  isSpinning = false;
+}
+
+/* ====== AUTOSPIN ====== */
+const delay = (ms)=>new Promise(r=>setTimeout(r,ms));
+
+async function runAutoLoop(){
+  while (autoOn){
+    if (isSpinning) { await delay(50); continue; }
+
+    const bet=parseFloat(betEl.value||'1');
+    if (freeSpins<=0 && balance < Math.max(0.5, Math.min(10, bet))) {
+      msg('Autospin stopped: insufficient funds.','info');
+      toggleAuto(false);
+      break;
+    }
+
+    await spin();
+    if (!autoOn) break;
+
+    const t0 = performance.now();
+    while (performance.now() - t0 < AUTO_DELAY_MS){
+      if (!autoOn) break;
+      await delay(50);
+    }
+  }
+}
+
+function toggleAuto(forceState){
+  const next = (typeof forceState==='boolean') ? forceState : !autoOn;
+  autoOn = next;
+  autoBtn.classList.toggle('on', autoOn);
+  autoBtn.setAttribute('aria-pressed', String(autoOn));
+  if (autoOn) {
+    runAutoLoop();
+  } else {
+    msg('Autospin: OFF','info');
+  }
+}
+
+/* ====== Rules modal & History button wiring ====== */
+const rulesBtn   = document.getElementById('rules-btn');
+const rulesModal = document.getElementById('rules-modal');
+
+/* ====== Secret bonus shortcut in Rules ====== */
+const secretBonusBtn = document.getElementById('secret-bonus-btn');
+if (secretBonusBtn) {
+  secretBonusBtn.addEventListener('click', () => {
+    // close the rules modal so it doesn't sit on top
+    closeRules();
+    // open the same bonus game as the Fred trigger
+    window.open('bonus.html', '_blank');
+  });
+}
+
+function openRules(){
+  rulesModal.classList.add('open');
+  rulesModal.setAttribute('aria-hidden','false');
+}
+function closeRules(){
+  rulesModal.classList.remove('open');
+  rulesModal.setAttribute('aria-hidden','true');
+}
+
+rulesBtn.addEventListener('click', openRules);
+rulesModal.addEventListener('click', (e)=>{
+  if (e.target.matches('[data-close="rules"]')) closeRules();
+});
+window.addEventListener('keydown', (e)=>{
+  if (e.key==='Escape' && rulesModal.classList.contains('open')) closeRules();
+  if (e.key==='a' || e.key==='A') toggleAuto();
+});
+
+/* History toggle */
+historyBtn.addEventListener('click', ()=>{
+  const isOpen = historyPanel.classList.toggle('open');
+  historyPanel.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+});
+
+/* Spin & Autospin buttons */
+document.getElementById('spin').addEventListener('click', async ()=>{
+  if (autoOn) { toggleAuto(false); return; }
+  await spin();
+});
+document.getElementById('auto').addEventListener('click', ()=> toggleAuto());
+  </script>
+</body>
+</html>
